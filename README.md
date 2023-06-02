@@ -26,8 +26,8 @@ RzBoard-Trail-Camera-Demo/
 	|	Renesas.Exposure_control.1.2.0.pack
 	|	Renesas.I2C_master_for_camera.1.0.0.pack
 	|	Renesas.OV5645.1.5.0.pack
-	|	rzv2l_cm33_rpmsg_demo
-	|	rtos				
+	|	rtos
+	+---rzv2l_cm33_rpmsg_demo ->
 ```
 # How to build and boot.
 Please refer to documentation on [AI Apps Integrating Linux with RTOS for Real Time Detection](https://www.hackster.io/bernard-ngabonziza/ai-apps-integrating-linux-with-rtos-for-real-time-detection-3e7b66) for more details.
