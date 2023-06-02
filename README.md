@@ -27,26 +27,6 @@ RzBoard-Trail-Camera-Demo/
 	|	Renesas.I2C_master_for_camera.1.0.0.pack
 	|	Renesas.OV5645.1.5.0.pack
 	|	rzv2l_cm33_rpmsg_demo.zip
-	|	rtos.zip				/
-	+---README.md (this document)
-	|	
-	+---Output -> Integrated package
-    	|	bl2_bp-rzboard.srec
-    	|	fip_rzboard.srec
-    	|	Flash_Writer_SCIF_rzboard.mot
-    	|	avnet-core-image-rzboard.tar.bz2
-	|
-	+---Yocto-build -> zip file and script for build yocto
-	|	RZV2L-Generic-Package-v0.5.zip
-	|	rz_yocto.sh
-	|
-	+---CM33 -> FreeRTOS package and source code
-	|	Renesas##BSP##rzv2l##fsp####1.0.0.xml
-	|	Renesas.CRU.1.5.0.pack
-	|	Renesas.Exposure_control.1.2.0.pack
-	|	Renesas.I2C_master_for_camera.1.0.0.pack
-	|	Renesas.OV5645.1.5.0.pack
-	|	rzv2l_cm33_rpmsg_demo.zip
 	|	rtos.zip				
 ```
 # How to build and boot.
