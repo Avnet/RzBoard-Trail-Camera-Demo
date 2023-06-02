@@ -1,0 +1,53 @@
+From d0b0e0a776a013916c9118cf4fc426bb63f769d4 Mon Sep 17 00:00:00 2001
+From: vudang <vu.dang.te@renasas.com>
+Date: Tue, 9 Aug 2022 16:10:51 +0700
+Subject: [PATCH] bl2: aarch64: add gpio p43_1 in the early initialization for
+ checking time
+
+This patch is used for add gpio p43_1 for checking boot time.
+We should add the gpio before any hardware initialization.
+
+Signed-off-by: vudang <vu.dang.te@renasas.com>
+---
+ bl2/aarch64/bl2_el3_entrypoint.S | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/bl2/aarch64/bl2_el3_entrypoint.S b/bl2/aarch64/bl2_el3_entrypoint.S
+index 45bac7da1..0b66fde40 100644
+--- a/bl2/aarch64/bl2_el3_entrypoint.S
++++ b/bl2/aarch64/bl2_el3_entrypoint.S
+@@ -35,6 +35,31 @@ func bl2_entrypoint
+ 		_exception_vectors=bl2_el3_exceptions		\
+ 		_pie_fixup_size=FIXUP_SIZE
+ 
++#if 1
++#define GPIO_BASE       (0x11030000)
++#define PMC_3B          (0x023B)
++#define PM_3B           (0x0176)
++#define P_3B            (0x003B)
++#define P43_1_BIT1      (1<<1)
++#define P43_1_BIT23     (2<<2)
++
++        ldr     x0, =GPIO_BASE
++        ldrb    w1, [x0, PMC_3B]
++        and     w1, w1, #~P43_1_BIT1
++        strb    w1, [x0, PMC_3B]
++
++        ldr     x0, =GPIO_BASE
++        ldrb    w1, [x0, PM_3B]
++        orr     w1, w1, #P43_1_BIT23
++        strb    w1, [x0, PM_3B]
++
++        ldr     x0, =GPIO_BASE
++        ldrb    w1, [x0, P_3B]
++        and     w1, w1, #~P43_1_BIT1
++        strb    w1, [x0, P_3B]
++
++#endif
++
+ 	/* ---------------------------------------------
+ 	 * Restore parameters of boot rom
+ 	 * ---------------------------------------------
+-- 
+2.17.1
+

@@ -1,0 +1,26 @@
+From 9f04308c0a09a005bb74f4dfb670d0c6fa0e4245 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 5 Jan 2023 10:46:59 +0000
+Subject: [PATCH 1/5] conf: add local.conf file for smarc board
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ build/conf/local.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/conf/local.conf b/build/conf/local.conf
+index b3082bf..b51cb96 100644
+--- a/build/conf/local.conf
++++ b/build/conf/local.conf
+@@ -35,7 +35,7 @@
+ #MACHINE ?= "edgerouter"
+ #
+ # This sets the default machine to be qemux86-64 if no other machine is selected:
+-# MACHINE ??= "smarc-rzv2l"
++MACHINE ??= "smarc-rzv2l"
+ # MACHINE ??= "rzboard"
+ 
+ # This sets the SoC
+-- 
+2.25.1
+
