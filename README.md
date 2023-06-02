@@ -6,9 +6,9 @@ About outline of package structure, please refer to Folder Structure section.
 
 # Folder Structure
 The following is an outline of the folder structure of this package.
-
+```
 RZ-AVNET_LinuxBSP_RTOS-Integration_Package_Rev0.5/
-	+---README.txt (this document)
+	+---README.md (this document)
 	|	
 	+---Output -> Integrated package
     	|	bl2_bp-rzboard.srec
@@ -35,7 +35,7 @@ RZ-AVNET_LinuxBSP_RTOS-Integration_Package_Rev0.5/
 	+---RZ-AVNET_TFTP-NFS-EMMC-boot_Rev0.1.pptx -> Guideline for writing rootfs into eMMC
 	|
 	+---avnet_normal_package.zip -> Package along with RZ-AVNET_TFTP-NFS-EMMC-boot_Rev0.1.pptx
-
+```
 # How to build and boot.
 Please refer to RZ-AVNET_LinuxBSP_RTOS-Integration_Guideline_Rev0.5.pptx for more details.
 
