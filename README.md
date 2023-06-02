@@ -28,13 +28,6 @@ RZ-AVNET_LinuxBSP_RTOS-Integration_Package_Rev0.5/
 	|	Renesas.OV5645.1.5.0.pack
 	|	rzv2l_cm33_rpmsg_demo.zip
 	|	rtos.zip				
-	|	RZV2L-AVNET_CM33_FSP_Camera_Guideline_Rev1.0.pptx -> Guideline for creating CM33 FSP binaries.
-	|
-	+---RZ-AVNET_LinuxBSP_RTOS-Integration_Guideline_Rev0.5.pptx -> Guideline for optimizing and intergrating.
-	|
-	+---RZ-AVNET_TFTP-NFS-EMMC-boot_Rev0.1.pptx -> Guideline for writing rootfs into eMMC
-	|
-	+---avnet_normal_package.zip -> Package along with RZ-AVNET_TFTP-NFS-EMMC-boot_Rev0.1.pptx
 ```
 # How to build and boot.
 Please refer to RZ-AVNET_LinuxBSP_RTOS-Integration_Guideline_Rev0.5.pptx for more details.
