@@ -1,0 +1,666 @@
+From ad51710eee345d50913e6262a1b469a270838c1f Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Wed, 11 Jan 2023 17:19:48 +0000
+Subject: [PATCH 3/6] poky: core: disable udev, psplash, urandom, dropbear,
+ dbus
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ poky/meta/recipes-core/dbus/dbus/dbus-1.init  | 184 +++++++++---------
+ poky/meta/recipes-core/dropbear/dropbear/init | 120 ++++++------
+ .../initscripts/initscripts-1.0/urandom       |  66 +++----
+ .../recipes-core/psplash/files/psplash-init   |  50 ++---
+ poky/meta/recipes-core/udev/eudev/init        | 150 +++++++-------
+ 5 files changed, 285 insertions(+), 285 deletions(-)
+
+diff --git a/poky/meta/recipes-core/dbus/dbus/dbus-1.init b/poky/meta/recipes-core/dbus/dbus/dbus-1.init
+index 90e167e..82d3a34 100644
+--- a/poky/meta/recipes-core/dbus/dbus/dbus-1.init
++++ b/poky/meta/recipes-core/dbus/dbus/dbus-1.init
+@@ -15,109 +15,109 @@
+ # Copyright © 2003 Colin Walters <walters@debian.org>
+ 
+ # set -e
+-
++exit 0;
+ # Source function library.
+-. /etc/init.d/functions
++#. /etc/init.d/functions
+ 
+-DAEMON=@bindir@/dbus-daemon
+-NAME=dbus
+-DAEMONUSER=messagebus           # must match /usr/share/dbus-1/system.conf
+-PIDFILE=/var/run/dbus/pid # must match /usr/share/dbus-1/system.conf
+-UUIDDIR=/var/lib/dbus
+-DESC="system message bus"
+-EVENTDIR=/etc/dbus-1/event.d
++#DAEMON=@bindir@/dbus-daemon
++#NAME=dbus
++#DAEMONUSER=messagebus           # must match /usr/share/dbus-1/system.conf
++#PIDFILE=/var/run/dbus/pid # must match /usr/share/dbus-1/system.conf
++#UUIDDIR=/var/lib/dbus
++#DESC="system message bus"
++#EVENTDIR=/etc/dbus-1/event.d
+ 
+-test -x $DAEMON || exit 0
++#test -x $DAEMON || exit 0
+ 
+ # Source defaults file; edit that file to configure this script.
+-ENABLED=1
+-PARAMS=""
+-if [ -e /etc/default/dbus ]; then
+-  . /etc/default/dbus
+-fi
++#ENABLED=1
++#PARAMS=""
++#if [ -e /etc/default/dbus ]; then
++#  . /etc/default/dbus
++#fi
+ 
+-test "$ENABLED" != "0" || exit 0
++#test "$ENABLED" != "0" || exit 0
+ 
+-start_it_up()
+-{
+-  mkdir -p "`dirname $PIDFILE`"
+-  if [ -e $PIDFILE ]; then
+-    PIDDIR=/proc/$(cat $PIDFILE)
+-    if [ -d ${PIDDIR} -a  "$(readlink -f ${PIDDIR}/exe)" = "${DAEMON}" ]; then 
+-      echo "$DESC already started; not starting."
+-    else
+-      echo "Removing stale PID file $PIDFILE."
+-      rm -f $PIDFILE
+-    fi
+-  fi
++#start_it_up()
++#{
++#  mkdir -p "`dirname $PIDFILE`"
++#  if [ -e $PIDFILE ]; then
++#    PIDDIR=/proc/$(cat $PIDFILE)
++#    if [ -d ${PIDDIR} -a  "$(readlink -f ${PIDDIR}/exe)" = "${DAEMON}" ]; then 
++#      echo "$DESC already started; not starting."
++#    else
++#      echo "Removing stale PID file $PIDFILE."
++#      rm -f $PIDFILE
++#    fi
++#  fi
+ 
+-  if [ ! -d $UUIDDIR ]; then
+-    mkdir -p $UUIDDIR
+-    chown $DAEMONUSER $UUIDDIR
+-    chgrp $DAEMONUSER $UUIDDIR
+-  fi
++#  if [ ! -d $UUIDDIR ]; then
++#    mkdir -p $UUIDDIR
++#    chown $DAEMONUSER $UUIDDIR
++#    chgrp $DAEMONUSER $UUIDDIR
++#  fi
+  
+-  dbus-uuidgen --ensure  
++#  dbus-uuidgen --ensure  
+ 
+-  echo -n "Starting $DESC: "
+-  start-stop-daemon -o --start --quiet --pidfile $PIDFILE \
+-    --user $DAEMONUSER --exec $DAEMON -- --system $PARAMS
+-  echo "$NAME."
+-  if [ -d $EVENTDIR ]; then
+-      run-parts --arg=start $EVENTDIR
+-  fi
+-}
++#  echo -n "Starting $DESC: "
++#  start-stop-daemon -o --start --quiet --pidfile $PIDFILE \
++#    --user $DAEMONUSER --exec $DAEMON -- --system $PARAMS
++#  echo "$NAME."
++#  if [ -d $EVENTDIR ]; then
++#      run-parts --arg=start $EVENTDIR
++#  fi
++#}
+ 
+-shut_it_down()
+-{
+-  if [ -d $EVENTDIR ]; then
+-      # TODO: --reverse when busybox supports it
+-      run-parts --arg=stop $EVENTDIR
+-  fi
+-  echo -n "Stopping $DESC: "
+-  start-stop-daemon -o --stop  --quiet --pidfile $PIDFILE \
+-    --user $DAEMONUSER
+-  # We no longer include these arguments so that start-stop-daemon
+-  # can do its job even given that we may have been upgraded.
+-  # We rely on the pidfile being sanely managed
+-  # --exec $DAEMON -- --system $PARAMS
+-  echo "$NAME."
+-  rm -f $PIDFILE
+-}
++#shut_it_down()
++#{
++#  if [ -d $EVENTDIR ]; then
++#      # TODO: --reverse when busybox supports it
++#      run-parts --arg=stop $EVENTDIR
++#  fi
++#  echo -n "Stopping $DESC: "
++#  start-stop-daemon -o --stop  --quiet --pidfile $PIDFILE \
++#    --user $DAEMONUSER
++#  # We no longer include these arguments so that start-stop-daemon
++#  # can do its job even given that we may have been upgraded.
++#  # We rely on the pidfile being sanely managed
++#  # --exec $DAEMON -- --system $PARAMS
++#  echo "$NAME."
++#  rm -f $PIDFILE
++#}
+ 
+-reload_it()
+-{
+-  echo -n "Reloading $DESC config: "
+-  dbus-send --print-reply --system --type=method_call \
+-            --dest=org.freedesktop.DBus \
+-            / org.freedesktop.DBus.ReloadConfig > /dev/null
+-  # hopefully this is enough time for dbus to reload it's config file.
+-  echo "done."
+-}
++#reload_it()
++#{
++#  echo -n "Reloading $DESC config: "
++#  dbus-send --print-reply --system --type=method_call \
++#            --dest=org.freedesktop.DBus \
++#            / org.freedesktop.DBus.ReloadConfig > /dev/null
++#  # hopefully this is enough time for dbus to reload it's config file.
++#  echo "done."
++#}
+ 
+-case "$1" in
+-  start)
+-    start_it_up
+-  ;;
+-  stop)
+-    shut_it_down
+-  ;;
+-  status)
+-    status $DAEMON
+-    exit $?
+-  ;;
+-  reload|force-reload)
+-    reload_it
+-  ;;
+-  restart)
+-    shut_it_down
+-    sleep 1
+-    start_it_up
+-  ;;
+-  *)
+-    echo "Usage: /etc/init.d/$NAME {start|stop|status|restart|reload|force-reload}" >&2
+-    exit 1
+-  ;;
+-esac
++#case "$1" in
++#  start)
++#    start_it_up
++#  ;;
++#  stop)
++#    shut_it_down
++#  ;;
++#  status)
++#    status $DAEMON
++#    exit $?
++#  ;;
++#  reload|force-reload)
++#    reload_it
++#  ;;
++#  restart)
++#    shut_it_down
++#    sleep 1
++#    start_it_up
++#  ;;
++#  *)
++#    echo "Usage: /etc/init.d/$NAME {start|stop|status|restart|reload|force-reload}" >&2
++#    exit 1
++#  ;;
++#esac
+ 
+-exit 0
++#exit 0
+diff --git a/poky/meta/recipes-core/dropbear/dropbear/init b/poky/meta/recipes-core/dropbear/dropbear/init
+index ffab7a2..a55f17d 100755
+--- a/poky/meta/recipes-core/dropbear/dropbear/init
++++ b/poky/meta/recipes-core/dropbear/dropbear/init
+@@ -10,70 +10,70 @@
+ #
+ # Do not configure this file. Edit /etc/default/dropbear instead!
+ #
++exit 0;
++#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
++#DAEMON=/usr/sbin/dropbear
++#NAME=dropbear
++#DESC="Dropbear SSH server"
++#PIDFILE=/var/run/dropbear.pid
+ 
+-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+-DAEMON=/usr/sbin/dropbear
+-NAME=dropbear
+-DESC="Dropbear SSH server"
+-PIDFILE=/var/run/dropbear.pid
++## These values may be replaced by those from /etc/default/dropbear
++#DROPBEAR_RSAKEY_DIR="/etc/dropbear"
++#DROPBEAR_PORT=22
++#DROPBEAR_EXTRA_ARGS=
++#DROPBEAR_RSAKEY_ARGS=
++#NO_START=0
+ 
+-# These values may be replaced by those from /etc/default/dropbear
+-DROPBEAR_RSAKEY_DIR="/etc/dropbear"
+-DROPBEAR_PORT=22
+-DROPBEAR_EXTRA_ARGS=
+-DROPBEAR_RSAKEY_ARGS=
+-NO_START=0
++#set -e
+ 
+-set -e
++#test ! -r /etc/default/dropbear || . /etc/default/dropbear
++#test "$NO_START" = "0" || exit 0
++#test -x "$DAEMON" || exit 0
++#test ! -h /var/service/dropbear || exit 0
+ 
+-test ! -r /etc/default/dropbear || . /etc/default/dropbear
+-test "$NO_START" = "0" || exit 0
+-test -x "$DAEMON" || exit 0
+-test ! -h /var/service/dropbear || exit 0
++#test -z "$DROPBEAR_BANNER" || \
++#  DROPBEAR_EXTRA_ARGS="$DROPBEAR_EXTRA_ARGS -b $DROPBEAR_BANNER"
++#test -n "$DROPBEAR_RSAKEY" || \
++#  DROPBEAR_RSAKEY="${DROPBEAR_RSAKEY_DIR}/dropbear_rsa_host_key"
+ 
+-test -z "$DROPBEAR_BANNER" || \
+-  DROPBEAR_EXTRA_ARGS="$DROPBEAR_EXTRA_ARGS -b $DROPBEAR_BANNER"
+-test -n "$DROPBEAR_RSAKEY" || \
+-  DROPBEAR_RSAKEY="${DROPBEAR_RSAKEY_DIR}/dropbear_rsa_host_key"
++#gen_keys() {
++#    if [ -f "$DROPBEAR_RSAKEY" -a ! -s "$DROPBEAR_RSAKEY" ]; then
++#        rm $DROPBEAR_RSAKEY || true
++#    fi
++#    if [ ! -f "$DROPBEAR_RSAKEY" ]; then
++#        mkdir -p ${DROPBEAR_RSAKEY%/*}
++#        dropbearkey -t rsa -f $DROPBEAR_RSAKEY $DROPBEAR_RSAKEY_ARGS
++#    fi
++#}
+ 
+-gen_keys() {
+-    if [ -f "$DROPBEAR_RSAKEY" -a ! -s "$DROPBEAR_RSAKEY" ]; then
+-        rm $DROPBEAR_RSAKEY || true
+-    fi
+-    if [ ! -f "$DROPBEAR_RSAKEY" ]; then
+-        mkdir -p ${DROPBEAR_RSAKEY%/*}
+-        dropbearkey -t rsa -f $DROPBEAR_RSAKEY $DROPBEAR_RSAKEY_ARGS
+-    fi
+-}
++#case "$1" in
++#  start)
++#	echo -n "Starting $DESC: "
++#	gen_keys
++#	start-stop-daemon -S -p $PIDFILE \
++#	  -x "$DAEMON" -- -r $DROPBEAR_RSAKEY \
++#	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
++#	echo "$NAME."
++#	;;
++#  stop)
++#	echo -n "Stopping $DESC: "
++#	start-stop-daemon -K -x "$DAEMON" -p $PIDFILE
++#	echo "$NAME."
++#	;;
++#  restart|force-reload)
++#	echo -n "Restarting $DESC: "
++#	start-stop-daemon -K -x "$DAEMON" -p $PIDFILE
++#	sleep 1
++#	start-stop-daemon -S -p $PIDFILE \
++#	  -x "$DAEMON" -- -r $DROPBEAR_RSAKEY \
++#	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
++#	echo "$NAME."
++#	;;
++#  *)
++#	N=/etc/init.d/$NAME
++#	echo "Usage: $N {start|stop|restart|force-reload}" >&2
++#	exit 1
++#	;;
++#esac
+ 
+-case "$1" in
+-  start)
+-	echo -n "Starting $DESC: "
+-	gen_keys
+-	start-stop-daemon -S -p $PIDFILE \
+-	  -x "$DAEMON" -- -r $DROPBEAR_RSAKEY \
+-	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
+-	echo "$NAME."
+-	;;
+-  stop)
+-	echo -n "Stopping $DESC: "
+-	start-stop-daemon -K -x "$DAEMON" -p $PIDFILE
+-	echo "$NAME."
+-	;;
+-  restart|force-reload)
+-	echo -n "Restarting $DESC: "
+-	start-stop-daemon -K -x "$DAEMON" -p $PIDFILE
+-	sleep 1
+-	start-stop-daemon -S -p $PIDFILE \
+-	  -x "$DAEMON" -- -r $DROPBEAR_RSAKEY \
+-	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
+-	echo "$NAME."
+-	;;
+-  *)
+-	N=/etc/init.d/$NAME
+-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+-	exit 1
+-	;;
+-esac
+-
+-exit 0
++#exit 0
+diff --git a/poky/meta/recipes-core/initscripts/initscripts-1.0/urandom b/poky/meta/recipes-core/initscripts/initscripts-1.0/urandom
+index af1625b..e80d8fc 100755
+--- a/poky/meta/recipes-core/initscripts/initscripts-1.0/urandom
++++ b/poky/meta/recipes-core/initscripts/initscripts-1.0/urandom
+@@ -10,40 +10,40 @@
+ #                    to ensure that the seed isn't predicable on startup
+ #                    (because the boot process is predictable)
+ ### END INIT INFO
++exit 0;
++#test -c /dev/urandom || exit 0
+ 
+-test -c /dev/urandom || exit 0
++#RANDOM_SEED_FILE=/var/lib/urandom/random-seed
+ 
+-RANDOM_SEED_FILE=/var/lib/urandom/random-seed
++#. /etc/default/rcS
++#[ -f /etc/default/urandom ] && . /etc/default/urandom
+ 
+-. /etc/default/rcS
+-[ -f /etc/default/urandom ] && . /etc/default/urandom
++#case "$1" in
++#	start|"")
++#		test "$VERBOSE" != no && echo "Initializing random number generator..."
++#		# Load and then save 512 bytes, which is the size of the entropy
++#		# pool. Also load the current date, in case the seed file is
++#		# empty.
++#		( date +%s.%N; [ -f "$RANDOM_SEED_FILE" ] && cat "$RANDOM_SEED_FILE" ) \
++#			>/dev/urandom
++#		rm -f "$RANDOM_SEED_FILE"
++#		umask 077
++#		dd if=/dev/urandom of=$RANDOM_SEED_FILE count=1 \
++#			>/dev/null 2>&1 || echo "urandom start: failed."
++#		umask 022
++#		;;
++#	stop)
++#		# Carry a random seed from shut-down to start-up;
++#		# see documentation in linux/drivers/char/random.c
++#		test "$VERBOSE" != no && echo "Saving random seed..."
++#		umask 077
++#		dd if=/dev/urandom of=$RANDOM_SEED_FILE count=1 \
++#			>/dev/null 2>&1 || echo "urandom stop: failed."
++#		;;
++#	*)
++#		echo "Usage: urandom {start|stop}" >&2
++#		exit 1
++#		;;
++#esac
+ 
+-case "$1" in
+-	start|"")
+-		test "$VERBOSE" != no && echo "Initializing random number generator..."
+-		# Load and then save 512 bytes, which is the size of the entropy
+-		# pool. Also load the current date, in case the seed file is
+-		# empty.
+-		( date +%s.%N; [ -f "$RANDOM_SEED_FILE" ] && cat "$RANDOM_SEED_FILE" ) \
+-			>/dev/urandom
+-		rm -f "$RANDOM_SEED_FILE"
+-		umask 077
+-		dd if=/dev/urandom of=$RANDOM_SEED_FILE count=1 \
+-			>/dev/null 2>&1 || echo "urandom start: failed."
+-		umask 022
+-		;;
+-	stop)
+-		# Carry a random seed from shut-down to start-up;
+-		# see documentation in linux/drivers/char/random.c
+-		test "$VERBOSE" != no && echo "Saving random seed..."
+-		umask 077
+-		dd if=/dev/urandom of=$RANDOM_SEED_FILE count=1 \
+-			>/dev/null 2>&1 || echo "urandom stop: failed."
+-		;;
+-	*)
+-		echo "Usage: urandom {start|stop}" >&2
+-		exit 1
+-		;;
+-esac
+-
+-exit 0
++#exit 0
+diff --git a/poky/meta/recipes-core/psplash/files/psplash-init b/poky/meta/recipes-core/psplash/files/psplash-init
+index f58e043..2793252 100755
+--- a/poky/meta/recipes-core/psplash/files/psplash-init
++++ b/poky/meta/recipes-core/psplash/files/psplash-init
+@@ -6,33 +6,33 @@
+ # Default-Start:        S
+ # Default-Stop:
+ ### END INIT INFO
++exit 0;
++#if [ ! -e /dev/fb0 ]; then
++#    echo "Framebuffer /dev/fb0 not detected"
++#    echo "Boot splashscreen disabled"
++#    exit 0;
++#fi
+ 
+-if [ ! -e /dev/fb0 ]; then
+-    echo "Framebuffer /dev/fb0 not detected"
+-    echo "Boot splashscreen disabled"
+-    exit 0;
+-fi
++#read CMDLINE < /proc/cmdline
++#for x in $CMDLINE; do
++#        case $x in
++#        psplash=false)
++#		echo "Boot splashscreen disabled" 
++#		exit 0;
++#                ;;
++#        esac
++#done
+ 
+-read CMDLINE < /proc/cmdline
+-for x in $CMDLINE; do
+-        case $x in
+-        psplash=false)
+-		echo "Boot splashscreen disabled" 
+-		exit 0;
+-                ;;
+-        esac
+-done
++#export PSPLASH_FIFO_DIR=/mnt/.psplash
++#[ -d $PSPLASH_FIFO_DIR ] || mkdir -p $PSPLASH_FIFO_DIR
++#if ! mountpoint -q $PSPLASH_FIFO_DIR; then
++#	mount tmpfs -t tmpfs $PSPLASH_FIFO_DIR -o,size=40k
++#fi
+ 
+-export PSPLASH_FIFO_DIR=/mnt/.psplash
+-[ -d $PSPLASH_FIFO_DIR ] || mkdir -p $PSPLASH_FIFO_DIR
+-if ! mountpoint -q $PSPLASH_FIFO_DIR; then
+-	mount tmpfs -t tmpfs $PSPLASH_FIFO_DIR -o,size=40k
+-fi
++#rotation=0
++#if [ -e /etc/rotation ]; then
++#	read rotation < /etc/rotation
++#fi
+ 
+-rotation=0
+-if [ -e /etc/rotation ]; then
+-	read rotation < /etc/rotation
+-fi
+-
+-/usr/bin/psplash --angle $rotation &
++#/usr/bin/psplash --angle $rotation &
+ 
+diff --git a/poky/meta/recipes-core/udev/eudev/init b/poky/meta/recipes-core/udev/eudev/init
+index c60dbbf..cffa9a7 100644
+--- a/poky/meta/recipes-core/udev/eudev/init
++++ b/poky/meta/recipes-core/udev/eudev/init
+@@ -8,86 +8,86 @@
+ # Default-Stop:
+ # Short-Description: Start udevd, populate /dev and load drivers.
+ ### END INIT INFO
++exit 0;
++#export TZ=/etc/localtime
+ 
+-export TZ=/etc/localtime
++#[ -d /sys/class ] || exit 1
++#[ -r /proc/mounts ] || exit 1
++#[ -x @UDEVD@ ] || exit 1
+ 
+-[ -d /sys/class ] || exit 1
+-[ -r /proc/mounts ] || exit 1
+-[ -x @UDEVD@ ] || exit 1
++#[ -f /etc/udev/udev.conf ] && . /etc/udev/udev.conf
++#[ -f /etc/default/rcS ] && . /etc/default/rcS
+ 
+-[ -f /etc/udev/udev.conf ] && . /etc/udev/udev.conf
+-[ -f /etc/default/rcS ] && . /etc/default/rcS
++#kill_udevd () {
++#    pid=`pidof -x udevd`
++#    [ -n "$pid" ] && kill $pid
++#}
+ 
+-kill_udevd () {
+-    pid=`pidof -x udevd`
+-    [ -n "$pid" ] && kill $pid
+-}
++#case "$1" in
++#  start)
++#    export ACTION=add
++#    # propagate /dev from /sys
++#    echo "Starting udev"
+ 
+-case "$1" in
+-  start)
+-    export ACTION=add
+-    # propagate /dev from /sys
+-    echo "Starting udev"
++#    # Check for requireed devtmpfs before trying to start udev and
++#    # mount a no-existant fs.
++#    if ! grep -q devtmpfs /proc/filesystems
++#    then
++#        echo "Missing devtmpfs, which is required for udev to run";
++#        echo "Halting..."
++#        halt
++#    fi
++#    # mount the devtmpfs on /dev, if not already done
++#    LANG=C awk '$2 == "/dev" && ($3 == "devtmpfs") { exit 1 }' /proc/mounts && {
++#            mount -n -o mode=0755 -t devtmpfs none "/dev"
++#    }
++#    [ -e /dev/pts ] || mkdir -m 0755 /dev/pts
++#    [ -e /dev/shm ] || mkdir -m 1777 /dev/shm
++#    # the automount rule for udev needs /tmp directory available, as /tmp is a symlink
++#    # to /var/tmp which in turn is a symlink to /var/volatile/tmp, we need to make sure
++#    # /var/volatile/tmp directory to be available.
++#    mkdir -m 1777 -p /var/volatile/tmp
+ 
+-    # Check for requireed devtmpfs before trying to start udev and
+-    # mount a no-existant fs.
+-    if ! grep -q devtmpfs /proc/filesystems
+-    then
+-        echo "Missing devtmpfs, which is required for udev to run";
+-        echo "Halting..."
+-        halt
+-    fi
+-    # mount the devtmpfs on /dev, if not already done
+-    LANG=C awk '$2 == "/dev" && ($3 == "devtmpfs") { exit 1 }' /proc/mounts && {
+-            mount -n -o mode=0755 -t devtmpfs none "/dev"
+-    }
+-    [ -e /dev/pts ] || mkdir -m 0755 /dev/pts
+-    [ -e /dev/shm ] || mkdir -m 1777 /dev/shm
+-    # the automount rule for udev needs /tmp directory available, as /tmp is a symlink
+-    # to /var/tmp which in turn is a symlink to /var/volatile/tmp, we need to make sure
+-    # /var/volatile/tmp directory to be available.
+-    mkdir -m 1777 -p /var/volatile/tmp
++#    # make_extra_nodes
++#    kill_udevd > "/dev/null" 2>&1
+ 
+-    # make_extra_nodes
+-    kill_udevd > "/dev/null" 2>&1
++#    # trigger the sorted events
++#    [ -e /proc/sys/kernel/hotplug ] && printf '\0\n' >/proc/sys/kernel/hotplug
++#    @UDEVD@ -d
+ 
+-    # trigger the sorted events
+-    [ -e /proc/sys/kernel/hotplug ] && printf '\0\n' >/proc/sys/kernel/hotplug
+-    @UDEVD@ -d
+-
+-    udevadm control --env=STARTUP=1
+-    if [ "$not_first_boot" != "" ];then
+-            if [ "$PROBE_PLATFORM_BUS" != "yes" ]; then
+-                PLATFORM_BUS_NOMATCH="--subsystem-nomatch=platform"
+-            else
+-                PLATFORM_BUS_NOMATCH=""
+-            fi
+-            udevadm trigger --action=add --subsystem-nomatch=tty --subsystem-nomatch=mem --subsystem-nomatch=vc --subsystem-nomatch=vtconsole --subsystem-nomatch=misc --subsystem-nomatch=dcon --subsystem-nomatch=pci_bus --subsystem-nomatch=graphics --subsystem-nomatch=backlight --subsystem-nomatch=video4linux $PLATFORM_BUS_NOMATCH
+-            (udevadm settle --timeout=3; udevadm control --env=STARTUP=)&
+-    else
+-            udevadm trigger --action=add
+-            udevadm settle
+-    fi
+-    ;;
+-  stop)
+-    echo "Stopping udevd"
+-    start-stop-daemon --stop --name udevd --quiet
+-    ;;
+-  restart)
+-    $0 stop
+-    sleep 1
+-    $0 start
+-    ;;
+-  status)
+-    pid=`pidof -x udevd`
+-    if [ -n "$pid" ]; then
+-	echo "udevd (pid $pid) is running ..."
+-    else
+-	echo "udevd is stopped"
+-    fi
+-    ;;
+-  *)
+-    echo "Usage: $0 {start|stop|status|restart}"
+-    exit 1
+-esac
+-exit 0
++#    udevadm control --env=STARTUP=1
++#    if [ "$not_first_boot" != "" ];then
++#            if [ "$PROBE_PLATFORM_BUS" != "yes" ]; then
++#                PLATFORM_BUS_NOMATCH="--subsystem-nomatch=platform"
++#            else
++#                PLATFORM_BUS_NOMATCH=""
++#            fi
++#            udevadm trigger --action=add --subsystem-nomatch=tty --subsystem-nomatch=mem --subsystem-nomatch=vc --subsystem-nomatch=vtconsole --subsystem-nomatch=misc --subsystem-nomatch=dcon --subsystem-nomatch=pci_bus --subsystem-nomatch=graphics --subsystem-nomatch=backlight --subsystem-nomatch=video4linux $PLATFORM_BUS_NOMATCH
++#            (udevadm settle --timeout=3; udevadm control --env=STARTUP=)&
++#    else
++#            udevadm trigger --action=add
++#            udevadm settle
++#    fi
++#    ;;
++#  stop)
++#    echo "Stopping udevd"
++#    start-stop-daemon --stop --name udevd --quiet
++#    ;;
++#  restart)
++#    $0 stop
++#    sleep 1
++#    $0 start
++#    ;;
++#  status)
++#    pid=`pidof -x udevd`
++#    if [ -n "$pid" ]; then
++#	echo "udevd (pid $pid) is running ..."
++#    else
++#	echo "udevd is stopped"
++#    fi
++#    ;;
++#  *)
++#    echo "Usage: $0 {start|stop|status|restart}"
++#    exit 1
++#esac
++#exit 0
+-- 
+2.25.1
+

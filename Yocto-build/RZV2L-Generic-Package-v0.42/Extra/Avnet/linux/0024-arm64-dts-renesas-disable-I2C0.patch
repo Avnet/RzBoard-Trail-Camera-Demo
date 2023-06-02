@@ -1,0 +1,28 @@
+From c39ad7da023d678a02b6d1c025d15ac12fe122c0 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renasas.com>
+Date: Wed, 4 Jan 2023 19:33:04 +0700
+Subject: [PATCH 24/27] arm64: dts: renesas: disable I2C0
+
+Disable I2C0 in Linux which is used in RTOS.
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ arch/arm64/boot/dts/renesas/rzboard.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzboard.dts b/arch/arm64/boot/dts/renesas/rzboard.dts
+index d178ae33ea6a..7b8cf9498f6b 100755
+--- a/arch/arm64/boot/dts/renesas/rzboard.dts
++++ b/arch/arm64/boot/dts/renesas/rzboard.dts
+@@ -451,7 +451,7 @@
+ 	pinctrl-names = "default";
+ 
+ 	clock-frequency = <100000>;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	ov5640: camera@3c {
+ 		compatible = "ovti,ov5640";
+-- 
+2.17.1
+

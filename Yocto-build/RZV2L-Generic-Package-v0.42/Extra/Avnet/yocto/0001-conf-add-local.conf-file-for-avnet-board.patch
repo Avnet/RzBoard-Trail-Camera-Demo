@@ -1,0 +1,39 @@
+From 63ebe5fa38f0eb7f6f0b5163efad836089dbe64d Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 5 Jan 2023 11:58:11 +0000
+Subject: [PATCH 01/13] conf: add local.conf file for avnet board
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ build/conf/bblayers.conf | 1 +
+ build/conf/local.conf    | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/build/conf/bblayers.conf b/build/conf/bblayers.conf
+index d4bc5ad..23faff2 100644
+--- a/build/conf/bblayers.conf
++++ b/build/conf/bblayers.conf
+@@ -15,6 +15,7 @@ BBLAYERS ?= " \
+   ${TOPDIR}/../poky/meta-poky \
+   ${TOPDIR}/../poky/meta-yocto-bsp \
+   ${TOPDIR}/../meta-renesas \
++  ${TOPDIR}/../meta-rzboard \
+   ${TOPDIR}/../meta-openembedded/meta-oe \
+   ${TOPDIR}/../meta-openembedded/meta-python \
+   ${TOPDIR}/../meta-openembedded/meta-multimedia \
+diff --git a/build/conf/local.conf b/build/conf/local.conf
+index b3082bf..8c26528 100644
+--- a/build/conf/local.conf
++++ b/build/conf/local.conf
+@@ -36,7 +36,7 @@
+ #
+ # This sets the default machine to be qemux86-64 if no other machine is selected:
+ # MACHINE ??= "smarc-rzv2l"
+-# MACHINE ??= "rzboard"
++MACHINE ??= "rzboard"
+ 
+ # This sets the SoC
+ # RZV2L: r9a07g054l
+-- 
+2.25.1
+

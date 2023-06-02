@@ -1,0 +1,77 @@
+From dc0725710b89746100c20f559e40ac68c5e94e40 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Mon, 20 Jun 2022 16:17:49 +0700
+Subject: [PATCH 03/27] pinctrl: pinctrl-rzg2l: clear Interrupt status when
+ unmask interrupt
+
+With RZ/G2L Series and RZ/V2L, we do not have a hardware mask bit for
+GPIO Interrupt mode.
+So we used TIEN bit (every 7th bit of TSSR register) for masking
+GPIO Interrupt mode.
+However, it will cause unexpected triggering for edge detection when
+unmask the interrupt. When it happens, interrupt signal will be
+triggered continuously without any stop point.
+So to avoid this issue, we will move "Clearing Interrupt status bit"
+from "irq_set_type" to "irq_unmask" functions.
+It will called right after unmask TIEN bit.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ drivers/pinctrl/renesas/pinctrl-rzg2l.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index b80b64695a15..bfb5ca699725 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -1048,6 +1048,7 @@ static void rzg2l_gpio_irq_unmask(struct irq_data *d)
+ 	u32 tint_slot;
+ 	unsigned long flags;
+ 	u32 reg32;
++	u32 irq_type;
+ 
+ 	gpioint = rzg2l_gpio_irq_validate_id(pctrl, port, bit);
+ 	if (gpioint == pctrl->data->ngpioints)
+@@ -1059,10 +1060,26 @@ static void rzg2l_gpio_irq_unmask(struct irq_data *d)
+ 
+ 	spin_lock_irqsave(&pctrl->lock, flags);
+ 
++	if (tint_slot > 15) {
++		reg32 = readl(pctrl->base_tint + TITSR1);
++		reg32 = reg32 >> ((tint_slot - 16) * 2);
++		irq_type = reg32 & IRQ_MASK;
++	} else {
++		reg32 = readl(pctrl->base_tint + TITSR0);
++		reg32 = reg32 >> (tint_slot * 2);
++		irq_type = reg32 & IRQ_MASK;
++	}
++
+ 	reg32 = readl(pctrl->base_tint + TSSR(tint_slot / 4));
+ 	reg32 |= BIT(7) << (8 * (tint_slot % 4));
+ 	writel(reg32, pctrl->base_tint + TSSR(tint_slot / 4));
+ 
++	/* Clear Interrupt status bit to avoid unexpected triggering */
++	if ((irq_type == RISING_EDGE) || (irq_type == FALLING_EDGE)) {
++		reg32 = readl(pctrl->base_tint + TSCR);
++		writel(reg32 & ~BIT(tint_slot), pctrl->base_tint + TSCR);
++	}
++
+ 	spin_unlock_irqrestore(&pctrl->lock, flags);
+ }
+ 
+@@ -1144,12 +1161,6 @@ static int rzg2l_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 	reg32 |= gpioint << (8 * (tint_slot % 4));
+ 	writel(reg32, pctrl->base_tint + TSSR(tint_slot / 4));
+ 
+-	/* Clear Interrupt status bit to avoid unexpected triggering */
+-	if ((irq_type == RISING_EDGE) || (irq_type == FALLING_EDGE)) {
+-		reg32 = readl(pctrl->base_tint + TSCR);
+-		writel(reg32 & ~BIT(tint_slot), pctrl->base_tint + TSCR);
+-	}
+-
+ 	spin_unlock_irqrestore(&pctrl->lock, flags);
+ 
+ 	return 0;
+-- 
+2.17.1
+

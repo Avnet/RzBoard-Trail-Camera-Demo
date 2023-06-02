@@ -1,0 +1,70 @@
+From 9d5fdd92cfca7efde7798156ed23225a1cce8dd4 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Mon, 13 Feb 2023 10:29:39 +0000
+Subject: [PATCH 2/6] rz-feature: drp-ai: disable ai-eva-sw
+
+---
+ .../include/drpai/extend_packages.inc         |  5 +--
+ .../recipes-app/ai-eva-sw/ai-eva-sw_7.2.0.bb  | 32 +++++++++----------
+ 2 files changed, 19 insertions(+), 18 deletions(-)
+
+diff --git a/meta-rz-features/include/drpai/extend_packages.inc b/meta-rz-features/include/drpai/extend_packages.inc
+index f853f7e..5b4a8f6 100644
+--- a/meta-rz-features/include/drpai/extend_packages.inc
++++ b/meta-rz-features/include/drpai/extend_packages.inc
+@@ -2,5 +2,6 @@
+ IMAGE_INSTALL_append = " \
+     libjpeg-turbo-dev \
+     kernel-module-udmabuf \
+-    ai-eva-sw \
+-"
+\ No newline at end of file
++"
++#    ai-eva-sw \
++#"
+diff --git a/meta-rz-features/recipes-drpai/recipes-app/ai-eva-sw/ai-eva-sw_7.2.0.bb b/meta-rz-features/recipes-drpai/recipes-app/ai-eva-sw/ai-eva-sw_7.2.0.bb
+index 8680135..38ac27b 100644
+--- a/meta-rz-features/recipes-drpai/recipes-app/ai-eva-sw/ai-eva-sw_7.2.0.bb
++++ b/meta-rz-features/recipes-drpai/recipes-app/ai-eva-sw/ai-eva-sw_7.2.0.bb
+@@ -22,22 +22,22 @@ S = "${WORKDIR}"
+ RDEPENDS_${PN} = "jpeg"
+ DEPENDS = "jpeg"
+ 
+-do_install() {
+-	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_bmp
+-	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_cam
+-	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_jpg
+-	     install -d ${D}${APP_INSTALL_DIRECTORY}/bmp_img
+-	     install -d ${D}${APP_INSTALL_DIRECTORY}/jpg_img
+-	     install -d ${D}/usr/bin
+-	     install -m 0755 ${WORKDIR}/resnet50_bmp/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_bmp
+-	     install -m 0755 ${WORKDIR}/resnet50_cam/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_cam
+-	     install -m 0755 ${WORKDIR}/resnet50_jpg/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_jpg
+-	     install -m 0755 ${WORKDIR}/bmp_img/*  ${D}${APP_INSTALL_DIRECTORY}/bmp_img
+-	     install -m 0755 ${WORKDIR}/jpg_img/*  ${D}${APP_INSTALL_DIRECTORY}/jpg_img
+-	     install -m 0755 ${WORKDIR}/rzv_ai_eva_sw  ${D}${APP_INSTALL_DIRECTORY}
+-	     install -m 0755 ${WORKDIR}/start_app.sh  ${D}${APP_INSTALL_DIRECTORY}
+-	     install -m 0755 ${WORKDIR}/config.ini  ${D}${APP_INSTALL_DIRECTORY}
+-}
++#do_install() {
++#	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_bmp
++#	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_cam
++#	     install -d ${D}${APP_INSTALL_DIRECTORY}/resnet50_jpg
++#	     install -d ${D}${APP_INSTALL_DIRECTORY}/bmp_img
++#	     install -d ${D}${APP_INSTALL_DIRECTORY}/jpg_img
++#	     install -d ${D}/usr/bin
++#	     install -m 0755 ${WORKDIR}/resnet50_bmp/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_bmp
++#	     install -m 0755 ${WORKDIR}/resnet50_cam/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_cam
++#	     install -m 0755 ${WORKDIR}/resnet50_jpg/*  ${D}${APP_INSTALL_DIRECTORY}/resnet50_jpg
++#	     install -m 0755 ${WORKDIR}/bmp_img/*  ${D}${APP_INSTALL_DIRECTORY}/bmp_img
++#	     install -m 0755 ${WORKDIR}/jpg_img/*  ${D}${APP_INSTALL_DIRECTORY}/jpg_img
++#	     install -m 0755 ${WORKDIR}/rzv_ai_eva_sw  ${D}${APP_INSTALL_DIRECTORY}
++#	     install -m 0755 ${WORKDIR}/start_app.sh  ${D}${APP_INSTALL_DIRECTORY}
++#	     install -m 0755 ${WORKDIR}/config.ini  ${D}${APP_INSTALL_DIRECTORY}
++#}
+ 
+ FILES_${PN} = " \
+ 	${APP_INSTALL_DIRECTORY}/* \
+-- 
+2.25.1
+

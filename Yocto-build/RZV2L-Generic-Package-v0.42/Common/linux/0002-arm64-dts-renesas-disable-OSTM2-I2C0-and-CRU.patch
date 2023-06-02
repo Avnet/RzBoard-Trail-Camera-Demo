@@ -1,0 +1,51 @@
+From 185a5dd587a23cf25a53a4516ac5af356d7fbeaf Mon Sep 17 00:00:00 2001
+From: vudang <vu.dang.te@renasas.com>
+Date: Thu, 27 Oct 2022 10:54:21 +0700
+Subject: [PATCH 2/6] arm64: dts: renesas: disable OSTM2, I2C0 and CRU
+
+Disable OSTM2, I2C0 and CRU in Linux which are used in RTOS.
+
+Signed-off-by: vudang <vu.dang.te@renasas.com>
+---
+ arch/arm64/boot/dts/renesas/rz-smarc-common.dtsi | 4 ++--
+ arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rz-smarc-common.dtsi b/arch/arm64/boot/dts/renesas/rz-smarc-common.dtsi
+index 0fdb4820f3f0..1ba30dcc6e39 100644
+--- a/arch/arm64/boot/dts/renesas/rz-smarc-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/rz-smarc-common.dtsi
+@@ -164,7 +164,7 @@
+ 	pinctrl-0 = <&i2c0_pins>;
+ 	pinctrl-names = "default";
+ 
+-	status = "okay";
++	status = "disabled";
+ 
+ 	ov5645: camera@3c {
+ 		compatible = "ovti,ov5645";
+@@ -331,7 +331,7 @@
+ };
+ 
+ &cru {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &csi2 {
+diff --git a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+index c5973d8b1057..68a783f395ae 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+@@ -189,7 +189,7 @@
+ };
+ 
+ &ostm2 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &pinctrl {
+-- 
+2.17.1
+
