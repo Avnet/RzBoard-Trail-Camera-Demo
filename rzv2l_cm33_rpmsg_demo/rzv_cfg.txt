@@ -1,0 +1,246 @@
+FSP Configuration
+  Board "RZ/V2L Evaluation Kit (SMARC)"
+  R9A07G054L23GBG
+    part_number: R9A07G054L23GBG
+    rom_size_bytes: 0
+    ram_size_bytes: 131072
+    package_style: LFBGA
+    package_pins: 456
+    
+  RZV2L
+    series: 2
+    
+  RZV2L Family
+  RZ/V2L Common
+    Secure stack size (bytes): 0x200
+    Main stack size (bytes): 0x200
+    Heap size (bytes): 0
+    MCU Vcc (mV): 3300
+    Parameter checking: Disabled
+    Assert Failures: Return FSP_ERR_ASSERTION
+    Error Log: No Error Log
+    PFS Protect: Enabled
+    C Runtime Initialization : Enabled
+    
+  Clocks
+    OSC 24000000Hz
+    ICLK 1200000000Hz
+    I2CLK 200000000Hz
+    GCLK 500000000Hz
+    S0CLK 12000Hz
+    S1CLK 6000Hz
+    SPI0CLK 200000000Hz
+    SPI1CLK 100000000Hz
+    SD0CLK 533000000Hz
+    SD1CLK 533000000Hz
+    M0CLK 200000000Hz
+    M1CLK 3000000000Hz
+    M2CLK 266500000Hz
+    M3CLK 3000000000Hz
+    M4CLK 16656000Hz
+    HPCLK 250000000Hz
+    TSUCLK 80000000Hz
+    ZTCLK 100000000Hz
+    P0CLK 100000000Hz
+    P1CLK 200000000Hz
+    P2CLK 100000000Hz
+    ATCLK 400000000Hz
+    
+  User Events
+    
+  Module "I/O Port Driver on r_ioport"
+    Parameter Checking: Default (BSP)
+    
+  Module "Timer Driver on r_gtm"
+    Parameter Checking: Default (BSP)
+    
+  Module "Heap 4"
+  Module "Message Handling Unit Driver (NonSecure) on r_mhu_ns"
+    Parameter Checking: Default (BSP)
+    
+  Module "UART Driver on r_scif_uart"
+    Parameter Checking: Default (BSP)
+    RS485 Flow (Driver Enable) Control Support: Disable
+    
+  Module "OpenAMP"
+  Module "Exposure Control (rm_exposure_control)"
+    Parameter Checking: Disabled
+    
+  Module "OV5645 Flow Sensor (rm_ov5645)"
+    Parameter Checking: Default (BSP)
+    Capture type YUV: Enabled
+    Capture type RAW8: Disabled
+    Capture type RAW10: Disabled
+    Capture size FHD: Enabled
+    Capture size HD: Disabled
+    
+  Module "I2C Master Driver on r_riic_master"
+    Parameter Checking: Default (BSP)
+    10-bit slave addressing: Disabled
+    
+  Module "CRU (r_cru)"
+    Parameter Checking: Default (BSP)
+    
+  FreeRTOS
+    General: Custom FreeRTOSConfig.h: 
+    General: Use MPU: Disabled
+    General: Use TRUSTZONE: Disabled
+    General: Use Preemption: Enabled
+    General: Use Port Optimised Task Selection: Disabled
+    General: Use Tickless Idle: Disabled
+    Hooks: Use Idle Hook: Enabled
+    Hooks: Use Malloc Failed Hook: Disabled
+    Hooks: Use Daemon Task Startup Hook: Disabled
+    Hooks: Use Tick Hook: Disabled
+    General: Cpu Clock Hz: SystemCoreClock
+    General: Tick Rate Hz: 1000
+    General: Max Priorities: 5
+    General: Minimal Stack Size: 128
+    General: Max Task Name Len: 16
+    Stats: Use Trace Facility: Disabled
+    Stats: Use Stats Formatting Functions: Disabled
+    General: Use 16-bit Ticks: Disabled
+    General: Idle Should Yield: Enabled
+    General: Use Task Notifications: Enabled
+    General: Use Mutexes: Disabled
+    General: Use Recursive Mutexes: Disabled
+    General: Use Counting Semaphores: Enabled
+    Hooks: Check For Stack Overflow: Disabled
+    General: Queue Registry Size: 10
+    General: Use Queue Sets: Disabled
+    General: Use Time Slicing: Disabled
+    General: Use Newlib Reentrant: Disabled
+    General: Enable Backward Compatibility: Disabled
+    General: Num Thread Local Storage Pointers: 5
+    General: Stack Depth Type: uint32_t
+    General: Message Buffer Length Type: size_t
+    Memory Allocation: Support Static Allocation: Enabled
+    Memory Allocation: Support Dynamic Allocation: Enabled
+    Memory Allocation: Total Heap Size: 40960
+    Memory Allocation: Application Allocated Heap: Enabled
+    Stats: Generate Run Time Stats: Disabled
+    Timers: Use Timers: Enabled
+    Timers: Timer Task Priority: 3
+    Timers: Timer Queue Length: 10
+    Timers: Timer Task Stack Depth: 128
+    General: Library Max Syscall Interrupt Priority: Priority 1
+    General: Assert: assert(x)
+    General: Include Application Defined Privileged Functions: Disabled
+    Optional Functions: vTaskPrioritySet() Function: Enabled
+    Optional Functions: uxTaskPriorityGet() Function: Enabled
+    Optional Functions: vTaskDelete() Function: Enabled
+    Optional Functions: vTaskSuspend() Function: Enabled
+    Optional Functions: xResumeFromISR() Function: Enabled
+    Optional Functions: vTaskDelayUntil() Function: Enabled
+    Optional Functions: vTaskDelay() Function: Enabled
+    Optional Functions: xTaskGetSchedulerState() Function: Enabled
+    Optional Functions: xTaskGetCurrentTaskHandle() Function: Enabled
+    Optional Functions: uxTaskGetStackHighWaterMark() Function: Disabled
+    Optional Functions: xTaskGetIdleTaskHandle() Function: Disabled
+    Optional Functions: eTaskGetState() Function: Disabled
+    Optional Functions: xEventGroupSetBitFromISR() Function: Enabled
+    Optional Functions: xTimerPendFunctionCall() Function: Disabled
+    Optional Functions: xTaskAbortDelay() Function: Disabled
+    Optional Functions: xTaskGetHandle() Function: Disabled
+    Optional Functions: xTaskResumeFromISR() Function: Enabled
+    Logging: Print String Function: 
+    Logging: Logging Max Message Length: 192
+    Logging: Logging Include Time and Task Name: Disabled
+    
+  HAL
+    Instance "g_ioport I/O Port Driver on r_ioport"
+      Name: g_ioport
+      
+    Instance "g_timer2 Timer Driver on r_gtm"
+      General: Name: g_timer2
+      General: Channel: 2
+      General: Mode: Periodic
+      General: Period: 1000
+      General: Period Unit: Hertz
+      General: Count Source: P0CLK
+      Interrupts: Callback: NULL
+      Interrupts: Underflow Interrupt Priority: 255
+      Interrupts: Generate at Start: Disable
+      Extra Features: GTM Mode: Interval timer mode
+      
+    Instance "Heap 4"
+    Instance "g_mhu_ns0 Message Handling Unit Driver (NonSecure) on r_mhu_ns"
+      Name: g_mhu_ns0
+      Channel: 3
+      Receive Callback: NULL
+      Use OpenAMP: true
+      Receive Interrupt Priority: 12
+      Shared memory address: 0
+      
+    Instance "g_uart2 UART Driver on r_scif_uart"
+      General: Name: g_uart2
+      General: Channel: 2
+      General: Data Bits: 8bits
+      General: Parity: None
+      General: Stop Bits: 1bit
+      Baud: Baud Rate: 115200
+      Baud: Baud Rate Modulation: Disabled
+      Baud: Max Error (%): 5
+      Flow Control: UART Communication Mode: RS232
+      Flow Control: RS485 Driver Enable Port: Disabled
+      Flow Control: RS485 Driver Enable Pin: Disabled
+      Flow Control: RS232C Automatic Flow Control: Disabled
+      Extra: Clock Source: Internal Clock
+      Extra: Noise Filter: Disable
+      Extra: Receive FIFO Trigger Level: Max
+      Extra: Receive FIFO RTS Trigger Level: 14
+      Interrupts: Callback: NULL
+      Interrupts: Error Interrupt (ERI) Priority: 14
+      Interrupts: Error Interrupt (BRI) Priority: 14
+      Interrupts: Receive Interrupt Priority: 14
+      Interrupts: Transmit Data Empty Interrupt Priority: 14
+      
+    Instance "OpenAMP"
+    Instance "g_exposure_ctl0 Exposure Control (rm_exposure_control)"
+      Name: g_exposure_ctl0
+      
+      Instance "g_ov5645_sensor0 OV5645 Flow Sensor (rm_ov5645)"
+        Name: g_ov5645_sensor0
+        
+        Instance "g_i2c_master_for_ov5645 I2C Master Driver on r_riic_master"
+          Name: g_i2c_master_for_ov5645
+          Channel: 0
+          Rate: Fast-mode
+          Rise Time (ns): 120
+          Fall Time (ns): 120
+          Duty Cycle (%): 50
+          Noise Filter Stages: 1
+          Slave Address: 0x3c
+          Address Mode: 7-Bit
+          Timeout Mode: Short Mode
+          Callback: i2c_callback
+          Interrupt Priority Level: 12
+          
+      Instance "g_cru_for_exposure CRU (r_cru)"
+        General: Name: g_cru_for_exposure
+        Input Format: YUV422 8bit
+        Output Format: UYVY (YUV422)
+        Data Lane: Use 2 data lane
+        Resolution: Width: 1920
+        Resolution: Height: 1080
+        Memory Bank: One transfer destination
+        Buffers: buf0_addr: 0xA1000000
+        Buffers: buf1_addr: 0xA1400000
+        Buffers: buf2_addr: 0xA1800000
+        Buffers: buf3_addr: 0xA1C00000
+        Buffers: buf4_addr: 0xA2000000
+        Buffers: buf5_addr: 0xA2400000
+        Buffers: buf6_addr: 0xA2800000
+        Buffers: buf7_addr: 0xA2C00000
+        Interrupts: Callback: cru_callback
+        Interrupts: Interrupt Priority: 24
+        
+  Thread "MainTask#0"
+    Symbol: MainTask
+    Name: MainTask#0
+    Stack size (bytes): 4096
+    Priority: 1
+    Thread Context: NULL
+    Memory Allocation: Dynamic
+    Allocate Secure Context: Enable
+    
