@@ -1,0 +1,53 @@
+From 8783000eb9cd2186a79db50b99915a0f781f7451 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Wed, 29 Jun 2022 17:07:02 +0700
+Subject: [PATCH 05/27] drm: rcar-du: rzg2l_mipi_dsi: move parsing dt to probe
+
+Parsing from devicetree should be called in probe function.
+It also helps about number of data lanes are not parsed in some
+cases with MIPI DSI Panel.
+So this patch is created to update correct step from parsing dt.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+index 141ffbfeb792..f88873e302f9 100644
+--- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+@@ -96,8 +96,6 @@ static void rzg2l_mipi_dsi_clr(void __iomem *mem, u32 reg, u32 clr)
+ 	rzg2l_mipi_dsi_write(mem, reg, rzg2l_mipi_dsi_read(mem, reg) & ~clr);
+ }
+ 
+-static int rzg2l_mipi_dsi_parse_dt(struct rzg2l_mipi_dsi *mipi_dsi);
+-
+ /* -----------------------------------------------------------------------------
+  * Hardware Setup
+  */
+@@ -564,10 +562,6 @@ static int rzg2l_mipi_dsi_attach(struct drm_bridge *bridge,
+ 	struct drm_encoder *encoder = bridge->encoder;
+ 	int ret;
+ 
+-	ret = rzg2l_mipi_dsi_parse_dt(mipi_dsi);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* If we have a next bridge just attach it. */
+ 	if (mipi_dsi->next_bridge)
+ 		return drm_bridge_attach(bridge->encoder,
+@@ -934,6 +928,10 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, mipi_dsi);
+ 	mipi_dsi->dev = dev;
+ 
++	ret = rzg2l_mipi_dsi_parse_dt(mipi_dsi);
++	if (ret < 0)
++		return ret;
++
+ 	/* Init bridge */
+ 	mipi_dsi->bridge.driver_private = mipi_dsi;
+ 	mipi_dsi->bridge.funcs = &rzg2l_mipi_dsi_bridge_ops;
+-- 
+2.17.1
+

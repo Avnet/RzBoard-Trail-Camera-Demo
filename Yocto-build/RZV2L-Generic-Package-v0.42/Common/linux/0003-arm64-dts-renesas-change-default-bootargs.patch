@@ -1,0 +1,27 @@
+From fdb26935eefd55ec11de0f550fd34cec7c9ad9d4 Mon Sep 17 00:00:00 2001
+From: vudang <vu.dang.te@renasas.com>
+Date: Mon, 26 Sep 2022 09:54:19 +0700
+Subject: [PATCH 3/6] arm64: dts: renesas: change default bootargs
+
+Signed-off-by: vudang <vu.dang.te@renasas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+index 68a783f395ae..6eaab20d1cb1 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2l-smarc-som.dtsi
+@@ -29,7 +29,8 @@
+ 	};
+ 
+ 	chosen {
+-		bootargs = "ignore_loglevel rw root=/dev/nfs ip=on";
++		/* bootargs = "ignore_loglevel rw root=/dev/nfs ip=on"; */
++                bootargs = "quiet loglevel=3 root=/dev/mmcblk0p1 rootwait";
+ 	};
+ 
+ 	memory@48000000 {
+-- 
+2.17.1
+

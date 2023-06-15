@@ -1,0 +1,29 @@
+From 8ad10b41a8c064dc8a37854dcb9253afa3229967 Mon Sep 17 00:00:00 2001
+From: Nick <nick.cheng@avnet.com>
+Date: Mon, 15 Aug 2022 16:41:40 +0800
+Subject: [PATCH 16/27] USB:DTS:RzBoard: Fix the bug that could not request pin
+ 32 (P4_0) from group usb0
+
+Signed-off-by: Nick <nick.cheng@avnet.com>
+---
+ arch/arm64/boot/dts/renesas/rzboard.dts | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzboard.dts b/arch/arm64/boot/dts/renesas/rzboard.dts
+index be32bf950857..492c1e050cd3 100755
+--- a/arch/arm64/boot/dts/renesas/rzboard.dts
++++ b/arch/arm64/boot/dts/renesas/rzboard.dts
+@@ -130,10 +130,6 @@
+ 		regulator-name = "USB2_VBUS0";
+ 		regulator-min-microvolt = <5000000>;
+ 		regulator-max-microvolt = <5000000>;
+-		gpios = <&pinctrl RZG2L_GPIO(4, 0) GPIO_ACTIVE_HIGH>;
+-		enable-active-high;
+-		startup-delay-us = <160000>;
+-		regulator-always-on;
+ 	};
+ 
+ 	audio_mclock: audio_mclock {
+-- 
+2.17.1
+

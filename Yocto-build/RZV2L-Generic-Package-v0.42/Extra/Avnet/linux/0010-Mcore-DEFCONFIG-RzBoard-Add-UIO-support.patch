@@ -1,0 +1,27 @@
+From e62b61c6928325cc17c71a524f8da621e899f740 Mon Sep 17 00:00:00 2001
+From: Nick <nick.cheng@avnet.com>
+Date: Wed, 10 Aug 2022 16:52:02 +0800
+Subject: [PATCH 10/27] Mcore:DEFCONFIG:RzBoard: Add UIO support
+
+Signed-off-by: Nick <nick.cheng@avnet.com>
+---
+ arch/arm64/configs/rzboard_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/configs/rzboard_defconfig b/arch/arm64/configs/rzboard_defconfig
+index f2dee065f9cd..c98516902b7f 100644
+--- a/arch/arm64/configs/rzboard_defconfig
++++ b/arch/arm64/configs/rzboard_defconfig
+@@ -302,6 +302,9 @@ CONFIG_DMADEVICES=y
+ CONFIG_RCAR_DMAC=y
+ CONFIG_RENESAS_USB_DMAC=y
+ CONFIG_RZ_DMAC=y
++CONFIG_UIO=y
++CONFIG_UIO_PDRV_GENIRQ=y
++CONFIG_UIO_DMEM_GENIRQ=y
+ CONFIG_VFIO=y
+ CONFIG_VFIO_PCI=y
+ CONFIG_VIRTIO_PCI=y
+-- 
+2.17.1
+

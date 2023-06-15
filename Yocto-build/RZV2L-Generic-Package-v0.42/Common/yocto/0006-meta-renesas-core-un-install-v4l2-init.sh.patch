@@ -1,0 +1,46 @@
+From e608e00aae41d66305096955fdf046b0a277c945 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 5 Jan 2023 09:59:44 +0000
+Subject: [PATCH 6/6] meta-renesas: core: un-install v4l2-init.sh
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ meta-renesas/include/core-image-renesas-base.inc     |  1 -
+ .../recipes-extend/v4l2-init/v4l2-init_1.0.bb        | 12 ++++++------
+ 2 files changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/meta-renesas/include/core-image-renesas-base.inc b/meta-renesas/include/core-image-renesas-base.inc
+index 453adbd..ae63429 100644
+--- a/meta-renesas/include/core-image-renesas-base.inc
++++ b/meta-renesas/include/core-image-renesas-base.inc
+@@ -11,7 +11,6 @@ IMAGE_INSTALL_append = "\
+ IMAGE_INSTALL_append = " \
+     bash \
+     v4l-utils \
+-    v4l2-init \
+     i2c-tools \
+     coreutils \
+     packagegroup-multimedia-libs \
+diff --git a/meta-renesas/recipes-common/recipes-extend/v4l2-init/v4l2-init_1.0.bb b/meta-renesas/recipes-common/recipes-extend/v4l2-init/v4l2-init_1.0.bb
+index b03c802..8db8ea2 100644
+--- a/meta-renesas/recipes-common/recipes-extend/v4l2-init/v4l2-init_1.0.bb
++++ b/meta-renesas/recipes-common/recipes-extend/v4l2-init/v4l2-init_1.0.bb
+@@ -25,9 +25,9 @@ FILES_${PN} += " \
+ 	/home/root/v4l2-init.sh \
+ "
+ 
+-do_install() {
+-	install -d ${D}/home/root
+-	install -m 0744 ${WORKDIR}/v4l2-init*.sh ${D}/home/root/v4l2-init.sh
+-	install -d ${D}/${systemd_unitdir}/system
+-	install -m 0644 ${WORKDIR}/v4l2-init.service ${D}/${systemd_unitdir}/system
+-}
++# do_install() {
++# 	install -d ${D}/home/root
++# 	install -m 0744 ${WORKDIR}/v4l2-init*.sh ${D}/home/root/v4l2-init.sh
++# 	install -d ${D}/${systemd_unitdir}/system
++# 	install -m 0644 ${WORKDIR}/v4l2-init.service ${D}/${systemd_unitdir}/system
++# }
+-- 
+2.25.1
+

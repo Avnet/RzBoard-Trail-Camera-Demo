@@ -1,0 +1,112 @@
+From aa6b5f63b84ce154c8743922071c3f05b8a192f8 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Thu, 5 Jan 2023 09:18:34 +0000
+Subject: [PATCH 4/6] meta-renesas: core: disable basic packages, additional
+ tools
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ meta-renesas/include/core-image-bsp.inc | 82 ++++++++++++-------------
+ 1 file changed, 41 insertions(+), 41 deletions(-)
+
+diff --git a/meta-renesas/include/core-image-bsp.inc b/meta-renesas/include/core-image-bsp.inc
+index 6f56514..1cb445c 100644
+--- a/meta-renesas/include/core-image-bsp.inc
++++ b/meta-renesas/include/core-image-bsp.inc
+@@ -1,33 +1,33 @@
+ # Basic packages
+-IMAGE_INSTALL_append = " \
+-    bonnie++ \
+-    util-linux \
+-    busybox \
+-    libusb1 \
+-    pciutils \
+-    iproute2 \
+-    i2c-tools \
+-    can-utils \
+-    ethtool \
+-    iperf3 \
+-    usbutils \
+-    mtd-utils \
+-    dosfstools \
+-    e2fsprogs-badblocks \
+-    e2fsprogs-dumpe2fs \
+-    e2fsprogs-e2fsck \
+-    e2fsprogs-e2scrub \
+-    e2fsprogs-mke2fs \
+-    e2fsprogs-resize2fs \
+-    e2fsprogs-tune2fs \
+-    minicom \
+-    memtester \
+-    alsa-utils \
+-    libdrm \
+-    libdrm-tests \
+-    yavta \
+-    kernel-module-uvcvideo \
+-"
++#IMAGE_INSTALL_append = " \
++#    bonnie++ \
++#    util-linux \
++#    busybox \
++#    libusb1 \
++#    pciutils \
++#    iproute2 \
++#    i2c-tools \
++#    can-utils \
++#    ethtool \
++#    iperf3 \
++#    usbutils \
++#    mtd-utils \
++#    dosfstools \
++#    e2fsprogs-badblocks \
++#    e2fsprogs-dumpe2fs \
++#    e2fsprogs-e2fsck \
++#    e2fsprogs-e2scrub \
++#    e2fsprogs-mke2fs \
++#    e2fsprogs-resize2fs \
++#    e2fsprogs-tune2fs \
++#    minicom \
++#    memtester \
++#    alsa-utils \
++#    libdrm \
++#    libdrm-tests \
++#    yavta \
++#    kernel-module-uvcvideo \
++#"
+ 
+ # Installation for Wifi/Bluetooth packages
+ IMAGE_INSTALL_append_rzg2h = " \
+@@ -47,18 +47,18 @@ IMAGE_INSTALL_append_rzg2h = " \
+ "
+ 
+ # Additional tools for support Tool develop
+-IMAGE_INSTALL_append = " \
+-    ckermit \
+-    connman \
+-    connman-client \
+-    connman-tools \
+-    connman-tests \
+-    connman-wait-online \
+-    lttng-modules \
+-    lttng-tools \
+-    lttng-ust \
+-    tcf-agent \
+-"
++#IMAGE_INSTALL_append = " \
++#    ckermit \
++#    connman \
++#    connman-client \
++#    connman-tools \
++#    connman-tests \
++#    connman-wait-online \
++#    lttng-modules \
++#    lttng-tools \
++#    lttng-ust \
++#    tcf-agent \
++#"
+ 
+ # Additional tools for support testing Realtime characteristic in system
+ IMAGE_INSTALL_append = " \
+-- 
+2.25.1
+

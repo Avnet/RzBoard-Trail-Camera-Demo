@@ -1,0 +1,926 @@
+From 44a6c8e2f236a247477f6c36a8c4a02c45350a8b Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Mon, 13 Feb 2023 10:42:28 +0000
+Subject: [PATCH 02/13] atf: add patch for optimization and integration
+
+---
+ .../0001-remove-U-boot-from-system-boot.patch | 171 +++++++++++++++++
+ .../files/0002-Load-RTOS-to-RAM.patch         | 181 ++++++++++++++++++
+ .../files/0003-Kick-CM33-smarc-rzv2l.patch    | 146 ++++++++++++++
+ .../files/0004-init-I2C-clock-in-ATF.patch    |  50 +++++
+ ...-change-kick_cm33-before-load-kernel.patch |  73 +++++++
+ .../0006-pull-up-pin-P48_3-at-ATF-entry.patch |  51 +++++
+ ...nit-essential-clocks-for-avnet-board.patch | 163 ++++++++++++++++
+ .../trusted-firmware-a.bbappend               |  15 ++
+ 8 files changed, 850 insertions(+)
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0001-remove-U-boot-from-system-boot.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0002-Load-RTOS-to-RAM.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0003-Kick-CM33-smarc-rzv2l.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0004-init-I2C-clock-in-ATF.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0005-change-kick_cm33-before-load-kernel.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0006-pull-up-pin-P48_3-at-ATF-entry.patch
+ create mode 100644 meta-rzboard/recipes-bsp/trusted-firmware-a/files/0007-BL2-init-essential-clocks-for-avnet-board.patch
+
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0001-remove-U-boot-from-system-boot.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0001-remove-U-boot-from-system-boot.patch
+new file mode 100644
+index 0000000..5487870
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0001-remove-U-boot-from-system-boot.patch
+@@ -0,0 +1,171 @@
++From f742ec19595841849bd24cf94b870aa12e033860 Mon Sep 17 00:00:00 2001
++From: vudang <vu.dang.te@renasas.com>
++Date: Fri, 16 Sep 2022 17:35:06 +0700
++Subject: [PATCH] remove U-boot from system boot.
++
++This patch is used for:
++1. Remove U-boot (BL33) from system boot and
++2. Add Image and DTB to that boot sequence.
++
++DTB and Image are defined as BL331 and BL332 respectively for more suitable
++to the context that we boot from ATF.
++Now, in the boot sequence, BL33 will be replaced by BL331 and BL332.
++
++Signed-off-by: vudang <vu.dang.te@renasas.com>
++---
++ bl31/bl31_main.c                              |  2 ++
++ .../rz/common/bl2_plat_mem_params_desc.c      | 29 +++++++++++++++----
++ plat/renesas/rz/common/include/platform_def.h | 15 ++++++++++
++ plat/renesas/rz/common/plat_storage.c         | 24 +++++++++++----
++ 4 files changed, 58 insertions(+), 12 deletions(-)
++
++diff --git a/bl31/bl31_main.c b/bl31/bl31_main.c
++index 9ac10e240..2fd389442 100644
++--- a/bl31/bl31_main.c
+++++ b/bl31/bl31_main.c
++@@ -249,6 +249,8 @@ void __init bl31_prepare_next_image_entry(void)
++ 	assert(next_image_info != NULL);
++ 	assert(image_type == GET_SECURITY_STATE(next_image_info->h.attr));
++ 
+++        INFO("BL31: Next arg0 for BL332 = 0x%lx\n", next_image_info->args.arg0);
+++
++ 	INFO("BL31: Preparing for EL3 exit to %s world\n",
++ 		(image_type == SECURE) ? "secure" : "normal");
++ 	print_entry_point_info(next_image_info);
++diff --git a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
++index bc008d411..a3e0fe394 100755
++--- a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
+++++ b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
++@@ -33,7 +33,7 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
++ # ifdef BL32_BASE
++ 		.next_handoff_image_id = BL32_IMAGE_ID,
++ # else
++-		.next_handoff_image_id = BL33_IMAGE_ID,
+++		.next_handoff_image_id = BL331_IMAGE_ID,
++ # endif /* BL32_BASE */
++ 	},
++ # ifdef BL32_BASE
++@@ -53,20 +53,37 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
++ 		.next_handoff_image_id = BL33_IMAGE_ID,
++ 	},
++ # endif /* BL32_BASE */
+++        {
+++                .image_id = BL331_IMAGE_ID,
+++
+++                SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+++                        entry_point_info_t, NON_SECURE | NON_EXECUTABLE),
+++                .ep_info.pc = BL331_BASE,
+++                .ep_info.spsr = 0,
+++
+++                SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+++                        image_info_t, 0),
+++                .image_info.image_max_size = BL331_LIMIT - BL331_BASE,
+++                .image_info.image_base = BL331_BASE,
+++
+++                .next_handoff_image_id = BL332_IMAGE_ID,
+++        },
++ 	{
++-		.image_id = BL33_IMAGE_ID,
+++		.image_id = BL332_IMAGE_ID,
++ 
++ 		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++ 			entry_point_info_t, NON_SECURE | EXECUTABLE),
++ 		.ep_info.spsr = SPSR_64(BL33_MODE, MODE_SP_ELX,
++ 			DISABLE_ALL_EXCEPTIONS),
++-		.ep_info.pc = BL33_BASE,
++-
+++		.ep_info.pc = BL332_BASE,
+++#ifdef RZ_BL332_ARG0
+++                .ep_info.args.arg0 = RZ_BL332_ARG0,
+++#endif
++ 		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++ 			image_info_t, 0),
++ 		.image_info.image_max_size =
++-				(uint32_t) (BL33_LIMIT - BL33_BASE),
++-		.image_info.image_base = BL33_BASE,
+++				(uint32_t) (BL332_LIMIT - BL332_BASE),
+++		.image_info.image_base = BL332_BASE,
++ 
++ 		.next_handoff_image_id = INVALID_IMAGE_ID,
++ 	}
++diff --git a/plat/renesas/rz/common/include/platform_def.h b/plat/renesas/rz/common/include/platform_def.h
++index 8de429ba0..17beedb75 100755
++--- a/plat/renesas/rz/common/include/platform_def.h
+++++ b/plat/renesas/rz/common/include/platform_def.h
++@@ -66,6 +66,21 @@
++ #define BL32_LIMIT				(BL32_BASE + 0x100000)
++ #endif
++ 
+++/*******************************************************************************
+++ * BL331
+++ ******************************************************************************/
+++#define BL331_BASE                              (0x48000000)
+++#define BL331_LIMIT                             (BL331_BASE + 0x80000)
+++#define BL331_IMAGE_ID                          NT_FW_CONFIG_ID
+++
+++/*******************************************************************************
+++ * BL332
+++ ******************************************************************************/
+++#define BL332_BASE                              (0x48080000)
+++#define BL332_LIMIT                             (BL332_BASE + 0x08000000)
+++#define RZ_BL332_ARG0                           (0x48000000)
+++#define BL332_IMAGE_ID                          BL33_IMAGE_ID
+++
++ /*******************************************************************************
++  * BL33
++  ******************************************************************************/
++diff --git a/plat/renesas/rz/common/plat_storage.c b/plat/renesas/rz/common/plat_storage.c
++index 04591db4e..cab229e4b 100755
++--- a/plat/renesas/rz/common/plat_storage.c
+++++ b/plat/renesas/rz/common/plat_storage.c
++@@ -44,8 +44,12 @@ static const io_uuid_spec_t bl32_file_spec = {
++ 	.uuid = UUID_SECURE_PAYLOAD_BL32,
++ };
++ 
++-static const io_uuid_spec_t bl33_file_spec = {
++-	.uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
+++static const io_uuid_spec_t bl331_file_spec = {
+++        .uuid = UUID_NT_FW_CONFIG,
+++};
+++
+++static const io_uuid_spec_t bl332_file_spec = {
+++        .uuid = UUID_NON_TRUSTED_FIRMWARE_BL33,
++ };
++ 
++ #if TRUSTED_BOARD_BOOT
++@@ -99,9 +103,13 @@ static const struct plat_io_policy spirom_policies[] = {
++ 				&fip_dev_handle,
++ 				(uintptr_t) &bl32_file_spec,
++ 				&open_fipdrv},
++-	[BL33_IMAGE_ID] = {
+++        [BL331_IMAGE_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &bl331_file_spec,
+++                                &open_fipdrv},
+++	[BL332_IMAGE_ID] = {
++ 				&fip_dev_handle,
++-				(uintptr_t) &bl33_file_spec,
+++				(uintptr_t) &bl332_file_spec,
++ 				&open_fipdrv},
++ #if TRUSTED_BOARD_BOOT
++ 	[SOC_FW_KEY_CERT_ID] = {
++@@ -145,10 +153,14 @@ static const struct plat_io_policy emmc_policies[] = {
++ 				&fip_dev_handle,
++ 				(uintptr_t) &bl32_file_spec,
++ 				&open_fipdrv},
++-	[BL33_IMAGE_ID] = {
+++	[BL331_IMAGE_ID] = {
++ 				&fip_dev_handle,
++-				(uintptr_t) &bl33_file_spec,
+++				(uintptr_t) &bl331_file_spec,
++ 				&open_fipdrv},
+++        [BL332_IMAGE_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &bl332_file_spec,
+++                                &open_fipdrv},
++ #if TRUSTED_BOARD_BOOT
++ 	[SOC_FW_KEY_CERT_ID] = {
++ 				&fip_dev_handle,
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0002-Load-RTOS-to-RAM.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0002-Load-RTOS-to-RAM.patch
+new file mode 100644
+index 0000000..321a577
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0002-Load-RTOS-to-RAM.patch
+@@ -0,0 +1,181 @@
++From b407911c0ee765371feb64d023d5ae1d7b6e49f7 Mon Sep 17 00:00:00 2001
++From: vudang <vu.dang.te@renasas.com>
++Date: Thu, 20 Oct 2022 10:16:35 +0700
++Subject: [PATCH 1/2] Load RTOS to RAM
++
++Signed-off-by: kietpham <son.nguyen-cong@banvien.com.vn>
++Signed-off-by: vudang <vu.dang.te@renasas.com>
++---
++ .../rz/common/bl2_plat_mem_params_desc.c      | 62 ++++++++++++++++++-
++ plat/renesas/rz/common/include/platform_def.h | 24 +++++++
++ plat/renesas/rz/common/plat_storage.c         | 32 ++++++++++
++ 3 files changed, 117 insertions(+), 1 deletion(-)
++
++diff --git a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
++index a3e0fe394..d67c5bd55 100755
++--- a/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
+++++ b/plat/renesas/rz/common/bl2_plat_mem_params_desc.c
++@@ -33,7 +33,7 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
++ # ifdef BL32_BASE
++ 		.next_handoff_image_id = BL32_IMAGE_ID,
++ # else
++-		.next_handoff_image_id = BL331_IMAGE_ID,
+++		.next_handoff_image_id = FW_CONFIG_ID,
++ # endif /* BL32_BASE */
++ 	},
++ # ifdef BL32_BASE
++@@ -53,6 +53,66 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
++ 		.next_handoff_image_id = BL33_IMAGE_ID,
++ 	},
++ # endif /* BL32_BASE */
+++        {
+++                .image_id = FW_CONFIG_ID,
+++
+++                SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+++                        entry_point_info_t, NON_SECURE | NON_EXECUTABLE),
+++                .ep_info.pc = FW_CONFIG_BASE,
+++                .ep_info.spsr = 0,
+++
+++                SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+++                        image_info_t, 0),
+++                .image_info.image_max_size = FW_CONFIG_LIMIT - FW_CONFIG_BASE,
+++                .image_info.image_base = FW_CONFIG_BASE,
+++
+++                .next_handoff_image_id = HW_CONFIG_ID,
+++        }, /* Finish load for rzv2l_cm33_rpmsg_demo_secure_code.bin */
+++        {
+++                .image_id = HW_CONFIG_ID,
+++
+++                SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+++                        entry_point_info_t, NON_SECURE | NON_EXECUTABLE),
+++                .ep_info.pc = HW_CONFIG_BASE,
+++                .ep_info.spsr = 0,
+++
+++                SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+++                        image_info_t, 0),
+++                .image_info.image_max_size = HW_CONFIG_LIMIT - HW_CONFIG_BASE,
+++                .image_info.image_base = HW_CONFIG_BASE,
+++
+++                .next_handoff_image_id = SOC_FW_CONFIG_ID,
+++        }, /* Finish load for rzv2l_cm33_rpmsg_demo_non_secure_vector.bin */
+++        {
+++                .image_id = SOC_FW_CONFIG_ID,
+++
+++                SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+++                        entry_point_info_t, NON_SECURE | NON_EXECUTABLE),
+++                .ep_info.pc = SOC_FW_CONFIG_BASE,
+++                .ep_info.spsr = 0,
+++
+++                SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+++                        image_info_t, 0),
+++                .image_info.image_max_size = SOC_FW_CONFIG_LIMIT - SOC_FW_CONFIG_BASE,
+++                .image_info.image_base = SOC_FW_CONFIG_BASE,
+++
+++                .next_handoff_image_id = RMM_IMAGE_ID,
+++        }, /* Finish load for rzv2l_cm33_rpmsg_demo_secure_vector.bin */
+++        {
+++                .image_id = RMM_IMAGE_ID,
+++
+++                SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
+++                        entry_point_info_t, NON_SECURE | EXECUTABLE),
+++                .ep_info.pc = RMM_FW_BASE,
+++                .ep_info.spsr = 0,
+++
+++                SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
+++                        image_info_t, 0),
+++                .image_info.image_max_size = RMM_FW_LIMIT - RMM_FW_BASE,
+++                .image_info.image_base = RMM_FW_BASE,
+++
+++                .next_handoff_image_id = BL331_IMAGE_ID,
+++        }, /* Finish load for rzv2l_cm33_rpmsg_demo_non_secure_code.bin */
++         {
++                 .image_id = BL331_IMAGE_ID,
++ 
++diff --git a/plat/renesas/rz/common/include/platform_def.h b/plat/renesas/rz/common/include/platform_def.h
++index 17beedb75..f5eefd503 100755
++--- a/plat/renesas/rz/common/include/platform_def.h
+++++ b/plat/renesas/rz/common/include/platform_def.h
++@@ -66,6 +66,30 @@
++ #define BL32_LIMIT				(BL32_BASE + 0x100000)
++ #endif
++ 
+++/*******************************************************************************
+++ * FW_CONFIG specific defines.
+++ ******************************************************************************/
+++#define FW_CONFIG_BASE                          (0x42EFF440)
+++#define FW_CONFIG_LIMIT                         (FW_CONFIG_BASE + 10000)
+++
+++/*******************************************************************************
+++ * HW_CONFIG specific defines.
+++ ******************************************************************************/
+++#define HW_CONFIG_BASE                          (0x00010000)
+++#define HW_CONFIG_LIMIT                         (HW_CONFIG_BASE + 5000)
+++
+++/*******************************************************************************
+++ * SOC_FW_CONFIG specific defines.
+++ ******************************************************************************/
+++#define SOC_FW_CONFIG_BASE                      (0x0001FF80)
+++#define SOC_FW_CONFIG_LIMIT                     (SOC_FW_CONFIG_BASE + 10000)
+++
+++/*******************************************************************************
+++ * Realm Monitor Management Firmware specific defines.
+++ ******************************************************************************/
+++#define RMM_FW_BASE                             (0x40010000)
+++#define RMM_FW_LIMIT                            (RMM_FW_BASE + 100000)
+++
++ /*******************************************************************************
++  * BL331
++  ******************************************************************************/
++diff --git a/plat/renesas/rz/common/plat_storage.c b/plat/renesas/rz/common/plat_storage.c
++index cab229e4b..786aa7c33 100755
++--- a/plat/renesas/rz/common/plat_storage.c
+++++ b/plat/renesas/rz/common/plat_storage.c
++@@ -40,6 +40,22 @@ static const io_uuid_spec_t bl31_file_spec = {
++ 	.uuid = UUID_EL3_RUNTIME_FIRMWARE_BL31,
++ };
++ 
+++static const io_uuid_spec_t fw_config_file_spec = {
+++       .uuid = UUID_FW_CONFIG,
+++};
+++
+++static const io_uuid_spec_t hw_config_file_spec = {
+++        .uuid = UUID_HW_CONFIG,
+++};
+++
+++static const io_uuid_spec_t soc_fw_config_file_spec = {
+++        .uuid = UUID_SOC_FW_CONFIG,
+++};
+++
+++static const io_uuid_spec_t rmm_fw_file_spec = {
+++        .uuid = UUID_REALM_MONITOR_MGMT_FIRMWARE,
+++};
+++
++ static const io_uuid_spec_t bl32_file_spec = {
++ 	.uuid = UUID_SECURE_PAYLOAD_BL32,
++ };
++@@ -103,6 +119,22 @@ static const struct plat_io_policy spirom_policies[] = {
++ 				&fip_dev_handle,
++ 				(uintptr_t) &bl32_file_spec,
++ 				&open_fipdrv},
+++        [FW_CONFIG_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &fw_config_file_spec,
+++                                &open_fipdrv},
+++        [HW_CONFIG_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &hw_config_file_spec,
+++                                &open_fipdrv},
+++        [SOC_FW_CONFIG_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &soc_fw_config_file_spec,
+++                                &open_fipdrv},
+++        [RMM_IMAGE_ID] = {
+++                                &fip_dev_handle,
+++                                (uintptr_t) &rmm_fw_file_spec,
+++                                &open_fipdrv},
++         [BL331_IMAGE_ID] = {
++                                 &fip_dev_handle,
++                                 (uintptr_t) &bl331_file_spec,
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0003-Kick-CM33-smarc-rzv2l.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0003-Kick-CM33-smarc-rzv2l.patch
+new file mode 100644
+index 0000000..fb121b7
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0003-Kick-CM33-smarc-rzv2l.patch
+@@ -0,0 +1,146 @@
++From 3b60d98e181e5c97c9396d831a099f3111c69851 Mon Sep 17 00:00:00 2001
++From: vudang <vu.dang.te@renasas.com>
++Date: Thu, 20 Oct 2022 10:38:44 +0700
++Subject: [PATCH 2/2] Kick CM33 smarc-rzv2l
++
++Signed-off-by: kietpham <son.nguyen-cong@banvien.com.vn>
++Signed-off-by: vudang <vu.dang.te@renasas.com>
++---
++ bl2/bl2_main.c | 106 ++++++++++++++++++++++++++++++++++++++++++++++++-
++ 1 file changed, 105 insertions(+), 1 deletion(-)
++
++diff --git a/bl2/bl2_main.c b/bl2/bl2_main.c
++index 90fe39bc2..22208f728 100644
++--- a/bl2/bl2_main.c
+++++ b/bl2/bl2_main.c
++@@ -18,7 +18,9 @@
++ #include <lib/extensions/pauth.h>
++ #include <plat/common/platform.h>
++ 
+++#include <lib/mmio.h>
++ #include "bl2_private.h"
+++#include <drivers/delay_timer.h>
++ 
++ #ifdef __aarch64__
++ #define NEXT_IMAGE	"BL31"
++@@ -70,6 +72,105 @@ void bl2_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
++ }
++ #endif /* BL2_AT_EL3 */
++ 
+++/*******************************************************************************
+++ * DEFINE CM33
+++ ******************************************************************************/
+++#define CPG_SIPLL3_MON                                  (0x1101013C)    // PLL3 (SSCG) Monitor Register
+++#define CPG_CLKON_CM33                                  (0x11010504)    // Clock Control Register Cortex-M33
+++#define CPG_CLKMON_CM33                                 (0x11010684)    // Clock Monitor Register Cortex-M33
+++#define CPG_RST_CM33                                    (0x11010804)    // Reset Control Register Cortex-M33
+++#define CPG_RSTMON_CM33                                 (0x11010984)    // Reset Monitor Register Cortex-M33
+++
+++#define SYS_CM33_CFG0                                   (0x11020804)    // CM33 Config Register0
+++#define SYS_CM33_CFG1                                   (0x11020808)    // CM33 Config Register1
+++#define SYS_CM33_CFG2                                   (0x1102080C)    // CM33 Config Register2
+++#define SYS_CM33_CFG3                                   (0x11020810)    // CM33 Config Register3
+++#define SYS_CM33_CTL                                    (0x11020818)    // CM33 Control Register
+++#define SYS_LSI_MODE                                    (0x11020A00)    // LSI Mode Signal Register
+++#define SYS_LP_CM33CTL1                                 (0x11020D28)    // Lowpower Sequence CM33 Control Register1
+++
+++void write_register(uintptr_t addr, uint32_t value)
+++{
+++        mmio_write_32(addr, value);
+++        if(mmio_read_32(addr) != value){
+++                INFO("BL2: Write register addr = 0x%lx <-- value = 0x%x - failed\n", addr, value);
+++        }
+++        else {
+++                INFO("BL2: Write register addr = 0x%lx <-- value = 0x%x - passed\n", addr, value);
+++        }
+++}
+++
+++void cm33_boot_normal_mode()
+++{
+++        // Supply clock to CM33_CLKIN
+++        write_register(CPG_CLKON_CM33 , 0x00010001);
+++
+++        // Poll CPG_CLKMON_CM33 to confirm that CM33_CLKIN clock is supplied
+++        while (mmio_read_32(CPG_CLKMON_CM33) != 0x1)
+++                mdelay(10);
+++
+++        // Stop the reset signals (released from the reset state)
+++        write_register(CPG_RST_CM33 , 0x00070007);
+++
+++        // Poll CPG_RSTMON_CM33 to confirm that all the reset signals are not applied
+++        while(mmio_read_32(CPG_RSTMON_CM33) != 0)
+++                mdelay(10);
+++}
+++
+++void cm33_boot_debug_mode()
+++{
+++        // Supply clock to CM33_TSCLK and CM33_CLKIN
+++        write_register(CPG_CLKON_CM33 , 0x00030003);
+++
+++        // Poll CPG_CLKMON_CM33 to confirm that both CM33_TSCLK and CM33_CLKIN clock are supplied
+++        while (mmio_read_32(CPG_CLKMON_CM33) != 0x3)
+++                mdelay(10);
+++
+++        // Set DEBUGQREQn bit of SYS_LP_CM33CTL1 to 1
+++        write_register(SYS_LP_CM33CTL1 , 0x00001100);
+++
+++        // Poll SYS_LP_CM33CTL1 to check if DEBUGQACCEPTn bit becomes 1
+++        // Fixme. Lacking of SYS_LP_CM33CTL1.DEBUGQACCEPTn info
+++
+++        // Set FETCHCNT bit of SYS_CM33_CTL register to 1
+++        write_register(SYS_CM33_CTL , 0x00000001);
+++
+++        // Stop the reset signals (released from the reset state)
+++        write_register(CPG_RST_CM33 , 0x00070007);
+++
+++        // Poll CPG_RSTMON_CM33 to confirm that all the reset signals are not applied
+++        while (mmio_read_32(CPG_RSTMON_CM33) != 0)
+++                mdelay(10);
+++
+++        // Set FETCHCNT bit of SYS_CM33_CTL register to 0
+++        write_register(SYS_CM33_CTL , 0x00000000);
+++}
+++
+++void cm33_start(unsigned char debug, uint32_t s_addr, uint32_t ns_addr)
+++{
+++        // Check if the SSCG PLL3 is ON or not
+++        if ((CPG_SIPLL3_MON & 0x1) == 0x1) {
+++                write_register(SYS_CM33_CFG0 , 0x00103CE5);
+++                write_register(SYS_CM33_CFG1 , 0x00103CE5);
+++        } else {
+++                write_register(SYS_CM33_CFG0 , 0x00003D08);
+++                write_register(SYS_CM33_CFG1 , 0x00003D08);
+++        }
+++
+++        // Set the secure vector address of Cortex-M33
+++        write_register(SYS_CM33_CFG2 , s_addr);
+++
+++        // Set the non secure vector address of Cortex-M33
+++        write_register(SYS_CM33_CFG3 , ns_addr);
+++
+++        // Start the CM33 propram in normal/debug mode
+++        debug ? cm33_boot_debug_mode() : cm33_boot_normal_mode();
+++}
+++
+++void kick_cm33() {
+++        cm33_start(1, 0x1001FF80, 0x00010000);
+++}
+++
++ /*******************************************************************************
++  * The only thing to do in BL2 is to load further images and pass control to
++  * next BL. The memory occupied by BL2 will be reclaimed by BL3x stages. BL2
++@@ -103,7 +204,10 @@ void bl2_main(void)
++ 	/* Load the subsequent bootloader images. */
++ 	next_bl_ep_info = bl2_load_images();
++ 
++-	/* Teardown the Measured Boot backend */
+++        /* Kick CM33 */
+++        kick_cm33();
+++
+++        /* Teardown the Measured Boot backend */
++ 	bl2_plat_mboot_finish();
++ 
++ #if !BL2_AT_EL3 && !ENABLE_RME
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0004-init-I2C-clock-in-ATF.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0004-init-I2C-clock-in-ATF.patch
+new file mode 100644
+index 0000000..76c30d0
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0004-init-I2C-clock-in-ATF.patch
+@@ -0,0 +1,50 @@
++From 36a95ed5dc4599277402364b3b17f3f445339a8a Mon Sep 17 00:00:00 2001
++From: "son.nguyen-cong" <son.nguyen-cong@banvien.com.vn>
++Date: Fri, 28 Oct 2022 13:18:05 +0700
++Subject: [PATCH] init I2C clock in ATF
++
++---
++ bl2/bl2_main.c | 20 ++++++++++++++++++++
++ 1 file changed, 20 insertions(+)
++
++diff --git a/bl2/bl2_main.c b/bl2/bl2_main.c
++index 22208f728..9c521802a 100644
++--- a/bl2/bl2_main.c
+++++ b/bl2/bl2_main.c
++@@ -89,6 +89,23 @@ void bl2_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
++ #define SYS_LSI_MODE                                    (0x11020A00)    // LSI Mode Signal Register
++ #define SYS_LP_CM33CTL1                                 (0x11020D28)    // Lowpower Sequence CM33 Control Register1
++ 
+++/* PFC */
+++#define PFC_BASE			(0x11030000)
+++#define I2C_CH1				(PFC_BASE + 0x1870)
+++#define CPG_BASE			0x11010000
+++#define CPG_RESET_BASE		(CPG_BASE + 0x800)
+++#define CPG_RESET_I2C        (CPG_RESET_BASE + 0x80)
+++
+++void init_I2C_clk(void)
+++{
+++	/* I2C CLK */
+++	mmio_write_32(CPG_RESET_I2C, 0xF000F);
+++
+++	/* I2C pin non GPIO enable */
+++	mmio_write_32(I2C_CH1, 0x01010101);
+++
+++}
+++
++ void write_register(uintptr_t addr, uint32_t value)
++ {
++         mmio_write_32(addr, value);
++@@ -204,6 +221,9 @@ void bl2_main(void)
++ 	/* Load the subsequent bootloader images. */
++ 	next_bl_ep_info = bl2_load_images();
++ 
+++		/* init_I2C_clk */
+++		init_I2C_clk();
+++
++         /* Kick CM33 */
++         kick_cm33();
++ 
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0005-change-kick_cm33-before-load-kernel.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0005-change-kick_cm33-before-load-kernel.patch
+new file mode 100644
+index 0000000..6f2ac2e
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0005-change-kick_cm33-before-load-kernel.patch
+@@ -0,0 +1,73 @@
++From 036052e950b03a67835348fa2b964ad286d4e721 Mon Sep 17 00:00:00 2001
++From: "son.nguyen-cong" <son.nguyen-cong@banvien.com.vn>
++Date: Wed, 9 Nov 2022 08:11:30 +0700
++Subject: [PATCH] change kick_cm33 before load kernel
++
++---
++ bl2/bl2_image_load_v2.c | 15 ++++++++++++++-
++ bl2/bl2_main.c          |  8 ++++----
++ 2 files changed, 18 insertions(+), 5 deletions(-)
++
++diff --git a/bl2/bl2_image_load_v2.c b/bl2/bl2_image_load_v2.c
++index 48c9beca6..cd81d6444 100644
++--- a/bl2/bl2_image_load_v2.c
+++++ b/bl2/bl2_image_load_v2.c
++@@ -19,6 +19,9 @@
++ 
++ #include "bl2_private.h"
++ 
+++extern void init_I2C_clk(void);
+++extern void kick_cm33() ;
+++
++ /*******************************************************************************
++  * This function loads SCP_BL2/BL3x images and returns the ep_info for
++  * the next executable image.
++@@ -66,7 +69,7 @@ struct entry_point_info *bl2_load_images(void)
++ 
++ 		if ((bl2_node_info->image_info->h.attr &
++ 		    IMAGE_ATTRIB_SKIP_LOADING) == 0U) {
++-			INFO("BL2: Loading image id %d\n", bl2_node_info->image_id);
+++			NOTICE("BL2: Loading image id %d\n", bl2_node_info->image_id);
++ 			err = load_auth_image(bl2_node_info->image_id,
++ 				bl2_node_info->image_info);
++ 			if (err != 0) {
++@@ -85,6 +88,16 @@ struct entry_point_info *bl2_load_images(void)
++ 			plat_error_handler(err);
++ 		}
++ 
+++		if(bl2_node_info->image_id == BL331_IMAGE_ID)
+++		{
+++			NOTICE("BL2: Kich CM33 image id = %d\n", bl2_node_info->image_id);
+++			/* init_I2C_clk */
+++			init_I2C_clk();
+++
+++			/* Kick CM33 */
+++			kick_cm33();
+++		}
+++
++ 		/* Go to next image */
++ 		bl2_node_info = bl2_node_info->next_load_info;
++ 	}
++diff --git a/bl2/bl2_main.c b/bl2/bl2_main.c
++index 9c521802a..a9cc33279 100644
++--- a/bl2/bl2_main.c
+++++ b/bl2/bl2_main.c
++@@ -221,11 +221,11 @@ void bl2_main(void)
++ 	/* Load the subsequent bootloader images. */
++ 	next_bl_ep_info = bl2_load_images();
++ 
++-		/* init_I2C_clk */
++-		init_I2C_clk();
+++		// /* init_I2C_clk */
+++		// init_I2C_clk();
++ 
++-        /* Kick CM33 */
++-        kick_cm33();
+++        // /* Kick CM33 */
+++        // kick_cm33();
++ 
++         /* Teardown the Measured Boot backend */
++ 	bl2_plat_mboot_finish();
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0006-pull-up-pin-P48_3-at-ATF-entry.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0006-pull-up-pin-P48_3-at-ATF-entry.patch
+new file mode 100644
+index 0000000..44fa785
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0006-pull-up-pin-P48_3-at-ATF-entry.patch
+@@ -0,0 +1,51 @@
++From a79fd2e03ad7562d0685915a94e3bce293c85ab5 Mon Sep 17 00:00:00 2001
++From: "son.nguyen-cong" <son.nguyen-cong@banvien.com.vn>
++Date: Tue, 6 Dec 2022 14:54:10 +0700
++Subject: [PATCH] pull up pin P48_3 at ATF entry
++
++---
++ bl2/aarch64/bl2_el3_entrypoint.S | 28 ++++++++++++++++++++++++++++
++ 1 file changed, 28 insertions(+)
++
++diff --git a/bl2/aarch64/bl2_el3_entrypoint.S b/bl2/aarch64/bl2_el3_entrypoint.S
++index 45bac7da1..59c723443 100644
++--- a/bl2/aarch64/bl2_el3_entrypoint.S
+++++ b/bl2/aarch64/bl2_el3_entrypoint.S
++@@ -35,6 +35,34 @@ func bl2_entrypoint
++ 		_exception_vectors=bl2_el3_exceptions		\
++ 		_pie_fixup_size=FIXUP_SIZE
++ 
+++		#if 1
+++		#define GPIO_BASE       (0x11030000)
+++		#define PMC_40          (0x0240)
+++		#define PM_40           (0x0180)
+++		#define P_40            (0x0040)
+++
+++		#define PMC40_BIT_4      (1<<4)
+++		#define PM40_BIT_76     (2<<6)
+++		#define P48_3_HIGH      (1<<3)
+++			/*PMC40*/
+++			ldr     x0, =GPIO_BASE
+++			ldr    	w1, [x0, PMC_40]
+++			and     w1, w1, #~PMC40_BIT_4
+++			str    	w1, [x0, PMC_40]
+++			/*PM40*/
+++			ldr     x0, =GPIO_BASE
+++			ldr    	w1, [x0, PM_40]
+++			orr     w1, w1, #PM40_BIT_76
+++			str    	w1, [x0, PM_40]
+++			/*P40*/
+++			ldr     x0, =GPIO_BASE
+++			ldr    	w1, [x0, P_40]
+++			orr     w1, w1, #P48_3_HIGH
+++			str    	w1, [x0, P_40]
+++		#endif
+++
+++
+++
++ 	/* ---------------------------------------------
++ 	 * Restore parameters of boot rom
++ 	 * ---------------------------------------------
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0007-BL2-init-essential-clocks-for-avnet-board.patch b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0007-BL2-init-essential-clocks-for-avnet-board.patch
+new file mode 100644
+index 0000000..95ce058
+--- /dev/null
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/files/0007-BL2-init-essential-clocks-for-avnet-board.patch
+@@ -0,0 +1,163 @@
++From 06dddfad80ff078e64f07b31c1d74805afb4064f Mon Sep 17 00:00:00 2001
++From: Vu Dang <vu.dang.te@renasas.com>
++Date: Mon, 13 Feb 2023 10:39:21 +0700
++Subject: [PATCH 7/7] BL2: init essential clocks for avnet board
++
++We port some essential clocks which are set in U-boot to ATF
++to make sure the system works correctly.
++
++Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
++---
++ bl2/bl2_image_load_v2.c |   4 +-
++ bl2/bl2_main.c          | 100 +++++++++++++++++++++++++++++++++++++---
++ 2 files changed, 95 insertions(+), 9 deletions(-)
++
++diff --git a/bl2/bl2_image_load_v2.c b/bl2/bl2_image_load_v2.c
++index cd81d6444..3328a5d40 100644
++--- a/bl2/bl2_image_load_v2.c
+++++ b/bl2/bl2_image_load_v2.c
++@@ -19,7 +19,7 @@
++ 
++ #include "bl2_private.h"
++ 
++-extern void init_I2C_clk(void);
+++//extern void init_I2C_clk(void);
++ extern void kick_cm33() ;
++ 
++ /*******************************************************************************
++@@ -92,7 +92,7 @@ struct entry_point_info *bl2_load_images(void)
++ 		{
++ 			NOTICE("BL2: Kich CM33 image id = %d\n", bl2_node_info->image_id);
++ 			/* init_I2C_clk */
++-			init_I2C_clk();
+++			//init_I2C_clk();
++ 
++ 			/* Kick CM33 */
++ 			kick_cm33();
++diff --git a/bl2/bl2_main.c b/bl2/bl2_main.c
++index a9cc33279..98b044826 100644
++--- a/bl2/bl2_main.c
+++++ b/bl2/bl2_main.c
++@@ -91,19 +91,99 @@ void bl2_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
++ 
++ /* PFC */
++ #define PFC_BASE			(0x11030000)
+++#define ETH_CH0                         (PFC_BASE + 0x300c)
+++#define ETH_CH1                         (PFC_BASE + 0x3010)
++ #define I2C_CH1				(PFC_BASE + 0x1870)
+++#define ETH_PVDD_3300 0x00
+++#define ETH_PVDD_1800 0x01
+++#define ETH_PVDD_2500 0x02
+++#define ETH_MII_RGMII                   (PFC_BASE + 0x3018)
+++
+++/* CPG */
++ #define CPG_BASE			0x11010000
++-#define CPG_RESET_BASE		(CPG_BASE + 0x800)
++-#define CPG_RESET_I2C        (CPG_RESET_BASE + 0x80)
+++#define CPG_CLKON_BASE                  (CPG_BASE + 0x500)
+++#define CPG_RESET_BASE		        (CPG_BASE + 0x800)
+++#define CPG_RESET_ETH                   (CPG_RESET_BASE + 0x7C)
+++#define CPG_RESET_I2C                   (CPG_RESET_BASE + 0x80)
+++#define CPG_PL2_SDHI_DSEL               (CPG_BASE + 0x218)
+++#define CPG_CLK_STATUS                  (CPG_BASE + 0x280)
+++
+++/* PFC */
+++#define PFC_P37                                         (PFC_BASE + 0x037)
+++#define PFC_PM37                                        (PFC_BASE + 0x16E)
+++#define PFC_PMC37                                       (PFC_BASE + 0x237)
++ 
++-void init_I2C_clk(void)
+++void s_init(void)
++ {
++-	/* I2C CLK */
++-	mmio_write_32(CPG_RESET_I2C, 0xF000F);
+++        /* SD1 power control: P39_1 = 0; P39_2 = 1; */
+++        *(volatile uint32_t *)(PFC_PMC37) &= 0xFFFFFFF9; /* Port func mode 0b00 */
+++        *(volatile uint32_t *)(PFC_PM37) = (*(volatile uint32_t *)(PFC_PM37) & 0xFFFFFFC3) | 0x28; /* Port output mode 0b1010 */
+++        *(volatile uint32_t *)(PFC_P37) = (*(volatile uint32_t *)(PFC_P37) & 0xFFFFFFF9) | 0x6;   /* Port 39[2:1] output value 0b11*/
+++        
+++        /* can go in board_eht_init() once enabled */
+++        *(volatile uint32_t *)(ETH_CH0) = (*(volatile uint32_t *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_1800;
+++        /* Enable RGMII for both ETH{0,1} */
+++        *(volatile uint32_t *)(ETH_MII_RGMII) = (*(volatile uint32_t *)(ETH_MII_RGMII) & 0xFFFFFFFC);
+++        /* ETH CLK */
+++        *(volatile uint32_t *)(CPG_RESET_ETH) = 0x30003;
+++        
+++        /* SD CLK */
+++        *(volatile uint32_t *)(CPG_PL2_SDHI_DSEL) = 0x00110011;
+++
+++        /* I2C CLK */
+++        *(volatile uint32_t *)(CPG_RESET_I2C) = 0xF000F;
+++        /* I2C pin non GPIO enable */
+++        *(volatile uint32_t *)(I2C_CH1) = 0x01010101;
+++
+++        /* SD CLK */
+++        *(volatile uint32_t *)(CPG_PL2_SDHI_DSEL) = 0x00110011;
+++        while (*(volatile uint32_t *)(CPG_CLK_STATUS) != 0)
+++                ;
+++}
++ 
++-	/* I2C pin non GPIO enable */
++-	mmio_write_32(I2C_CH1, 0x01010101);
+++/* PFC */
+++#define PFC_P18                         (PFC_BASE + 0x018)
+++#define PFC_PM18                                (PFC_BASE + 0x130)
+++#define PFC_PMC18                               (PFC_BASE + 0x218)
+++#define PFC_P21                         (PFC_BASE + 0x142)
+++#define PFC_PM21                                (PFC_BASE + 0x128)
+++#define PFC_PMC21                               (PFC_BASE + 0x221)
+++#define PFC_P23                         (PFC_BASE + 0x023)
+++#define PFC_PM23                                (PFC_BASE + 0x146)
+++#define PFC_PMC23                               (PFC_BASE + 0x223)
+++
+++#define PFC_P10                         (PFC_BASE + 0x010)
+++#define PFC_PM10                                (PFC_BASE + 0x120)
+++#define PFC_PMC10                               (PFC_BASE + 0x210)
+++
+++int board_led_init(void)
+++{
+++        /* RED LED: P8_1 = 0; */
+++        *(volatile uint32_t *)(PFC_PMC18) &= 0xFFFFFFFD;
+++        *(volatile uint32_t *)(PFC_PM18) = (*(volatile uint32_t *)(PFC_PM18) & 0xFFFFFFF3) | 0x08;
+++        *(volatile uint32_t *)(PFC_P18) = (*(volatile uint32_t *)(PFC_P18) & 0xFFFFFFFD) | 0x0;
+++        /* GREEN LED: P17_2 = 1; */
+++        *(volatile uint32_t *)(PFC_PMC21) &= 0xFFFFFFFB;
+++        *(volatile uint32_t *)(PFC_PM21) = (*(volatile uint32_t *)(PFC_PM21) & 0xFFFFFFCF) | 0x20;
+++        *(volatile uint32_t *)(PFC_P21) = (*(volatile uint32_t *)(PFC_P21) & 0xFFFFFFFB) | 0x4;
+++        /* BLUE LED: P19_1 = 0; */
+++        *(volatile uint32_t *)(PFC_PMC23) &= 0xFFFFFFFD;
+++        *(volatile uint32_t *)(PFC_PM23) = (*(volatile uint32_t *)(PFC_PM23) & 0xFFFFFFF3) | 0x08;
+++        *(volatile uint32_t *)(PFC_P23) = (*(volatile uint32_t *)(PFC_P23) & 0xFFFFFFFD) | 0x0;
+++
+++        return 0;
+++}
++ 
+++int usbhub_reset(void)
+++{
+++        /* USB Hub Reset: P0_0 = 1; */
+++        *(volatile uint32_t *)(PFC_PMC10) &= 0xFFFFFFFE;
+++        *(volatile uint32_t *)(PFC_PM10) = (*(volatile uint32_t *)(PFC_PM10) & 0xFFFFFFFC) | 0x02;
+++        *(volatile uint32_t *)(PFC_P10) = (*(volatile uint32_t *)(PFC_P10) & 0xFFFFFFFE) | 0x0;
+++        mdelay(2);
+++        *(volatile uint32_t *)(PFC_P10) = (*(volatile uint32_t *)(PFC_P10) & 0xFFFFFFFE) | 0x1;
+++
+++        return 0;
++ }
++ 
++ void write_register(uintptr_t addr, uint32_t value)
++@@ -203,6 +283,12 @@ void bl2_main(void)
++ 	/* Perform remaining generic architectural setup in S-EL1 */
++ 	bl2_arch_setup();
++ 
+++        board_led_init();
+++
+++        s_init();
+++
+++        usbhub_reset();
+++
++ #if PSA_FWU_SUPPORT
++ 	fwu_init();
++ #endif /* PSA_FWU_SUPPORT */
++-- 
++2.17.1
++
+diff --git a/meta-rzboard/recipes-bsp/trusted-firmware-a/trusted-firmware-a.bbappend b/meta-rzboard/recipes-bsp/trusted-firmware-a/trusted-firmware-a.bbappend
+index 26c87f9..afdf68f 100644
+--- a/meta-rzboard/recipes-bsp/trusted-firmware-a/trusted-firmware-a.bbappend
++++ b/meta-rzboard/recipes-bsp/trusted-firmware-a/trusted-firmware-a.bbappend
+@@ -11,3 +11,18 @@ PLATFORM_rzboard = "v2l"
+ EXTRA_FLAGS_rzboard = "BOARD=rzboard"
+ FLASH_ADDRESS_BL2_BP_rzboard = "00000"
+ FLASH_ADDRESS_FIP_rzboard = "1D200"
++
++FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
++
++SRC_URI_append = " \
++       file://0001-remove-U-boot-from-system-boot.patch \
++       file://0002-Load-RTOS-to-RAM.patch \
++       file://0003-Kick-CM33-smarc-rzv2l.patch \
++       file://0004-init-I2C-clock-in-ATF.patch \
++       file://0005-change-kick_cm33-before-load-kernel.patch \
++"
++
++SRC_URI_append = " \
++       file://0006-pull-up-pin-P48_3-at-ATF-entry.patch \
++       file://0007-BL2-init-essential-clocks-for-avnet-board.patch \
++"
+-- 
+2.25.1
+

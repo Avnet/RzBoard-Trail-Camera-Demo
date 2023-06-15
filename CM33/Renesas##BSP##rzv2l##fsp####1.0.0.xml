@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<raModuleDescription>
+  <config id="config.bsp.rzv2l.fsp" path="fsp_cfg/bsp/bsp_mcu_family_cfg.h" version="0">
+    <content>
+      <![CDATA[#include "bsp_mcu_device_pn_cfg.h"
+#include "bsp_mcu_device_cfg.h"
+#include "bsp_mcu_info.h"
+#include "bsp_clock_cfg.h"
+#define BSP_MCU_GROUP_RZV2L (1)
+#define BSP_CORTEX_VECTOR_TABLE_ENTRIES    (16U)
+#define BSP_VECTOR_TABLE_MAX_ENTRIES       (496U)
+
+#if defined(_RZV2L_TZ_SECURE)
+            #define BSP_TZ_SECURE_BUILD           (1)
+            #define BSP_TZ_NONSECURE_BUILD        (0)
+            #elif defined(_RZV2L_TZ_NONSECURE)
+            #define BSP_TZ_SECURE_BUILD           (0)
+            #define BSP_TZ_NONSECURE_BUILD        (1)
+            #else
+#define BSP_TZ_SECURE_BUILD           (0)
+#define BSP_TZ_NONSECURE_BUILD        (0)
+#endif
+
+/* TrustZone Settings */
+#define BSP_TZ_CFG_INIT_SECURE_ONLY       (BSP_CFG_CLOCKS_SECURE || (!BSP_CFG_CLOCKS_OVERRIDE))
+#define BSP_TZ_CFG_SKIP_INIT              (BSP_TZ_NONSECURE_BUILD && BSP_TZ_CFG_INIT_SECURE_ONLY)
+
+#define SCB_SCR_SLEEPDEEPS_VAL            (0)
+#define SCB_SCR_SLEEPDEEP_VAL             (0)
+
+/* CMSIS TrustZone Settings */
+#define SCB_CSR_AIRCR_INIT                (1)
+#define SCB_AIRCR_BFHFNMINS_VAL           (1)
+#define SCB_AIRCR_SYSRESETREQS_VAL        (0)
+#define SCB_AIRCR_PRIS_VAL                (0)
+#define TZ_FPU_NS_USAGE                   (1)
+#ifndef SCB_NSACR_CP10_11_VAL
+#define SCB_NSACR_CP10_11_VAL             (3U)
+#endif
+#define SCB_SHCSR_SECUREFAULTENA_VAL	  (1)
+
+#ifndef FPU_FPCCR_TS_VAL
+#define FPU_FPCCR_TS_VAL                  (0U)
+#endif
+#define FPU_FPCCR_CLRONRETS_VAL           (0)
+
+#ifndef FPU_FPCCR_CLRONRET_VAL
+#define FPU_FPCCR_CLRONRET_VAL            (1)
+#endif
+]]>
+    </content>
+  </config>
+  <bsp id="bsp.rzv2l.fsp" config="config.bsp.rzv2l.fsp" display="RZV2L Family" version="0">
+    <enum id="enum.mcu.nvic.priorities.mandatory" default="board.icu.common.irq.priority2">
+      <option display="Priority 0 (highest)" id="board.icu.common.irq.priority0" value="(0)" />
+      <option display="Priority 1" id="board.icu.common.irq.priority1" value="(1)" />
+      <option display="Priority 2" id="board.icu.common.irq.priority2" value="(2)" />
+      <option display="Priority 3" id="board.icu.common.irq.priority3" value="(3)" />
+    </enum>
+    <enum id="enum.mcu.nvic.priorities.optional" default="_disabled">
+      <option display="Priority 0 (highest)" id="board.icu.common.irq.priority0" value="(0)" />
+      <option display="Priority 1" id="board.icu.common.irq.priority1" value="(1)" />
+      <option display="Priority 2" id="board.icu.common.irq.priority2" value="(2)" />
+      <option display="Priority 3" id="board.icu.common.irq.priority3" value="(3)" />
+      <option display="Disabled" id="_disabled" value="(BSP_IRQ_DISABLED)" />
+    </enum>
+    <enum id="enum.mcu.nvic.isr.optional" default="board.icu.common.irq.enabled">
+      <option display="Enabled" id="board.icu.common.irq.enabled" value="1" />
+      <option display="Disabled" id="_disabled" value="0" />
+    </enum>
+    <enum id="enum.mcu.nvic.isr.mandatory" default="board.icu.common.irq.enabled">
+      <option display="Enabled" id="board.icu.common.irq.enabled" value="1" />
+    </enum>
+    <enum id="enum.driver.gpt.sources" default="">
+      <option display="GTETRGA Rising Edge" id="module.driver.gpt.source_gtetrga_rising" value="GTETRGA_RISING" />
+      <option display="GTETRGA Falling Edge" id="module.driver.gpt.source_gtetrga_falling" value="GTETRGA_FALLING" />
+      <option display="GTETRGB Rising Edge" id="module.driver.gpt.source_gtetrgb_rising" value="GTETRGB_RISING" />
+      <option display="GTETRGB Falling Edge" id="module.driver.gpt.source_gtetrgb_falling" value="GTETRGB_FALLING" />
+      <option display="GTETRGC Rising Edge" id="module.driver.gpt.source_gtetrgc_rising" value="GTETRGC_RISING" />
+      <option display="GTETRGC Falling Edge" id="module.driver.gpt.source_gtetrgc_falling" value="GTETRGC_FALLING" />
+      <option display="GTETRGD Rising Edge" id="module.driver.gpt.source_gtetrgd_rising" value="GTETRGD_RISING" />
+      <option display="GTETRGD Falling Edge" id="module.driver.gpt.source_gtetrgd_falling" value="GTETRGC_FALLING" />
+      <option display="GTIOCA Rising Edge While GTIOCB Low" id="module.driver.gpt.source_gtioca_rising_gtiocb_low" value="GTIOCA_RISING_WHILE_GTIOCB_LOW" />
+      <option display="GTIOCA Rising Edge While GTIOCB High" id="module.driver.gpt.source_gtioca_rising_gtiocb_high" value="GTIOCA_RISING_WHILE_GTIOCB_HIGH" />
+      <option display="GTIOCA Falling Edge While GTIOCB Low" id="module.driver.gpt.source_gtioca_falling_gtiocb_low" value="GTIOCA_FALLING_WHILE_GTIOCB_LOW" />
+      <option display="GTIOCA Falling Edge While GTIOCB High" id="module.driver.gpt.source_gtioca_falling_gtiocb_high" value="GTIOCA_FALLING_WHILE_GTIOCB_HIGH" />
+      <option display="GTIOCB Rising Edge While GTIOCA Low" id="module.driver.gpt.source_gtiocb_rising_gtioca_low" value="GTIOCB_RISING_WHILE_GTIOCA_LOW" />
+      <option display="GTIOCB Rising Edge While GTIOCA High" id="module.driver.gpt.source_gtiocb_rising_gtioca_high" value="GTIOCB_RISING_WHILE_GTIOCA_HIGH" />
+      <option display="GTIOCB Falling Edge While GTIOCA Low" id="module.driver.gpt.source_gtiocb_falling_gtioca_low" value="GTIOCB_FALLING_WHILE_GTIOCA_LOW" />
+      <option display="GTIOCB Falling Edge While GTIOCA High" id="module.driver.gpt.source_gtiocb_falling_gtioca_high" value="GTIOCB_FALLING_WHILE_GTIOCA_HIGH" />
+    </enum>
+    <enum id="enum.driver.poeg.trigger" default="">
+      <option display="GTETRG Pin" id="module.driver.poeg.trigger.trigger_pin" value="POEG_TRIGGER_PIN" />
+      <option display="GPT Output Level" id="module.driver.poeg.trigger.trigger_gpt_output_level" value="POEG_TRIGGER_GPT_OUTPUT_LEVEL" />
+    </enum>
+    <clock>
+      <node id="board.clock.osc.freq" xhint="0" yhint="0" default="24000000">
+        <option id="_edit" display="OSC ${value}Hz" maxValue="24000000" macroName="BSP_CFG_CLOCK_OSCCLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.iclk.freq" xhint="0" yhint="1" default="1200000000">
+        <option id="_edit" display="ICLK ${value}Hz" maxValue="1200000000" macroName="BSP_CFG_CLOCK_ICLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.i2clk.freq" xhint="0" yhint="2" default="200000000">
+        <option id="_edit" display="I2CLK ${value}Hz" maxValue="200000000" macroName="BSP_CFG_CLOCK_I2CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.gclk.freq" xhint="0" yhint="3" default="500000000">
+        <option id="_edit" display="GCLK ${value}Hz" maxValue="500000000" macroName="BSP_CFG_CLOCK_GCLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.s0clk.freq" xhint="0" yhint="4" default="12000">
+        <option id="_edit" display="S0CLK ${value}Hz" maxValue="12000" macroName="BSP_CFG_CLOCK_S0CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.s1clk.freq" xhint="0" yhint="5" default="6000">
+        <option id="_edit" display="S1CLK ${value}Hz" maxValue="6000" macroName="BSP_CFG_CLOCK_S1CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.spi0clk.freq" xhint="0" yhint="6" default="200000000">
+        <option id="_edit" display="SPI0CLK ${value}Hz" maxValue="200000000" macroName="BSP_CFG_CLOCK_SPI0CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.spi1clk.freq" xhint="0" yhint="7" default="100000000">
+        <option id="_edit" display="SPI1CLK ${value}Hz" maxValue="100000000" macroName="BSP_CFG_CLOCK_SPI1CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.sd0clk.freq" xhint="0" yhint="8" default="533000000">
+        <option id="_edit" display="SD0CLK ${value}Hz" maxValue="533000000" macroName="BSP_CFG_CLOCK_SD0CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.sd1clk.freq" xhint="0" yhint="9" default="533000000">
+        <option id="_edit" display="SD1CLK ${value}Hz" maxValue="533000000" macroName="BSP_CFG_CLOCK_SD1CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.m0clk.freq" xhint="0" yhint="10" default="200000000">
+        <option id="_edit" display="M0CLK ${value}Hz" maxValue="200000000" macroName="BSP_CFG_CLOCK_M0CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.m1clk.freq" xhint="0" yhint="11" default="3000000000">
+        <option id="_edit" display="M1CLK ${value}Hz" maxValue="3000000000" macroName="BSP_CFG_CLOCK_M1CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.m2clk.freq" xhint="0" yhint="12" default="266500000">
+        <option id="_edit" display="M2CLK ${value}Hz" maxValue="266500000" macroName="BSP_CFG_CLOCK_M2CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.m3clk.freq" xhint="0" yhint="13" default="3000000000">
+        <option id="_edit" display="M3CLK ${value}Hz" maxValue="3000000000" macroName="BSP_CFG_CLOCK_M3CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.m4clk.freq" xhint="0" yhint="14" default="16656000">
+        <option id="_edit" display="M4CLK ${value}Hz" maxValue="16656000" macroName="BSP_CFG_CLOCK_M4CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.hpclk.freq" xhint="0" yhint="15" default="250000000">
+        <option id="_edit" display="HPCLK ${value}Hz" maxValue="250000000" macroName="BSP_CFG_CLOCK_HPCLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.tsuclk.freq" xhint="0" yhint="16" default="80000000">
+        <option id="_edit" display="TSUCLK ${value}Hz" maxValue="80000000" macroName="BSP_CFG_CLOCK_TSUCLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.ztclk.freq" xhint="0" yhint="17" default="100000000">
+        <option id="_edit" display="ZTCLK ${value}Hz" maxValue="100000000" macroName="BSP_CFG_CLOCK_ZTCLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.p0clk.freq" xhint="0" yhint="18" default="100000000">
+        <peripheral id="board.clock.peripheral.iic" />
+        <peripheral id="board.clock.peripheral.gpt" />
+        <peripheral id="board.clock.peripheral.gtm" />
+        <peripheral id="board.clock.peripheral.scif" />
+        <peripheral id="board.clock.peripheral.rspi" />
+        <option id="_edit" display="P0CLK ${value}Hz" maxValue="100000000" macroName="BSP_CFG_CLOCK_P0CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.p1clk.freq" xhint="0" yhint="19" default="200000000">
+        <option id="_edit" display="P1CLK ${value}Hz" maxValue="200000000" macroName="BSP_CFG_CLOCK_P1CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.p2clk.freq" xhint="0" yhint="20" default="100000000">
+        <option id="_edit" display="P2CLK ${value}Hz" maxValue="100000000" macroName="BSP_CFG_CLOCK_P2CLK_HZ" macroValue="(${value})" />
+      </node>
+      <node id="board.clock.atclk.freq" xhint="0" yhint="21" default="400000000">
+        <option id="_edit" display="ATCLK ${value}Hz" maxValue="400000000" macroName="BSP_CFG_CLOCK_ATCLK_HZ" macroValue="(${value})" />
+      </node>
+    </clock>
+    <event id="event.gtm0.int" display="GTM|GTM0|ID:46 GTM0 INT (GTM0 Interrupt)" value="GTM0_OSTM0INT_IRQn">
+    </event>
+    <event id="event.gtm1.int" display="GTM|GTM1|ID:47 GTM1 INT (GTM1 Interrupt)" value="GTM1_OSTM1INT_IRQn">
+    </event>
+    <event id="event.gtm2.int" display="GTM|GTM2|ID:48 GTM2 INT (GTM2 Interrupt)" value="GTM2_OSTM2INT_IRQn">
+    </event>
+    <event id="event.mhu0.msg_int" display="MHU|MHU0|ID:56 MHU0 MSG_INT (Secure Message Interrupt ch0)" value="MHU_MSG0_S_IRQn">
+    </event>
+    <event id="event.mhu1.msg_int" display="MHU|MHU1|ID:57 MHU1 MSG_INT (Secure Message Interrupt ch1)" value="MHU_MSG1_S_IRQn">
+    </event>
+    <event id="event.mhu2.msg_int" display="MHU|MHU2|ID:58 MHU2 MSG_INT (Secure Message Interrupt ch2)" value="MHU_MSG2_S_IRQn">
+    </event>
+    <event id="event.mhu3.msg_int" display="MHU|MHU3|ID:59 MHU3 MSG_INT (Secure Message Interrupt ch3)" value="MHU_MSG3_S_IRQn">
+    </event>
+    <event id="event.mhu4.msg_int" display="MHU|MHU4|ID:60 MHU4 MSG_INT (Secure Message Interrupt ch4)" value="MHU_MSG4_S_IRQn">
+    </event>
+    <event id="event.mhu5.msg_int" display="MHU|MHU5|ID:61 MHU5 MSG_INT (Secure Message Interrupt ch5)" value="MHU_MSG5_S_IRQn">
+    </event>
+    <event id="event.mhu0.rsp_int" display="MHU|MHU0|ID:62 MHU0 RSP_INT (Secure Response Interrupt ch0)" value="MHU_RSP0_S_IRQn">
+    </event>
+    <event id="event.mhu1.rsp_int" display="MHU|MHU1|ID:63 MHU1 RSP_INT (Secure Response Interrupt ch1)" value="MHU_RSP1_S_IRQn">
+    </event>
+    <event id="event.mhu2.rsp_int" display="MHU|MHU2|ID:64 MHU2 RSP_INT (Secure Response Interrupt ch2)" value="MHU_RSP2_S_IRQn">
+    </event>
+    <event id="event.mhu3.rsp_int" display="MHU|MHU3|ID:65 MHU3 RSP_INT (Secure Response Interrupt ch3)" value="MHU_RSP3_S_IRQn">
+    </event>
+    <event id="event.mhu4.rsp_int" display="MHU|MHU4|ID:66 MHU4 RSP_INT (Secure Response Interrupt ch4)" value="MHU_RSP4_S_IRQn">
+    </event>
+    <event id="event.mhu5.rsp_int" display="MHU|MHU5|ID:67 MHU5 RSP_INT (Secure Response Interrupt ch5)" value="MHU_RSP5_S_IRQn">
+    </event>
+    <event id="event.mhu0.msg_int_ns" display="MHU|MHU0|ID:68 MHU0 MSG_INT_NS (Non-Secure Message Interrupt ch0)" value="MHU_MSG0_NS_IRQn">
+    </event>
+    <event id="event.mhu1.msg_int_ns" display="MHU|MHU1|ID:69 MHU1 MSG_INT_NS (Non-Secure Message Interrupt ch1)" value="MHU_MSG1_NS_IRQn">
+    </event>
+    <event id="event.mhu2.msg_int_ns" display="MHU|MHU2|ID:70 MHU2 MSG_INT_NS (Non-Secure Message Interrupt ch2)" value="MHU_MSG2_NS_IRQn">
+    </event>
+    <event id="event.mhu3.msg_int_ns" display="MHU|MHU3|ID:71 MHU3 MSG_INT_NS (Non-Secure Message Interrupt ch3)" value="MHU_MSG3_NS_IRQn">
+    </event>
+    <event id="event.mhu4.msg_int_ns" display="MHU|MHU4|ID:72 MHU4 MSG_INT_NS (Non-Secure Message Interrupt ch4)" value="MHU_MSG4_NS_IRQn">
+    </event>
+    <event id="event.mhu5.msg_int_ns" display="MHU|MHU5|ID:73 MHU5 MSG_INT_NS (Non-Secure Message Interrupt ch5)" value="MHU_MSG5_NS_IRQn">
+    </event>
+    <event id="event.mhu0.rsp_int_ns" display="MHU|MHU0|ID:74 MHU0 RSP_INT_NS (Non-Secure Response Interrupt ch0)" value="MHU_RSP0_NS_IRQn">
+    </event>
+    <event id="event.mhu1.rsp_int_ns" display="MHU|MHU1|ID:75 MHU1 RSP_INT_NS (Non-Secure Response Interrupt ch1)" value="MHU_RSP1_NS_IRQn">
+    </event>
+    <event id="event.mhu2.rsp_int_ns" display="MHU|MHU2|ID:76 MHU2 RSP_INT_NS (Non-Secure Response Interrupt ch2)" value="MHU_RSP2_NS_IRQn">
+    </event>
+    <event id="event.mhu3.rsp_int_ns" display="MHU|MHU3|ID:77 MHU3 RSP_INT_NS (Non-Secure Response Interrupt ch3)" value="MHU_RSP3_NS_IRQn">
+    </event>
+    <event id="event.mhu4.rsp_int_ns" display="MHU|MHU4|ID:78 MHU4 RSP_INT_NS (Non-Secure Response Interrupt ch4)" value="MHU_RSP4_NS_IRQn">
+    </event>
+    <event id="event.mhu5.rsp_int_ns" display="MHU|MHU5|ID:79 MHU5 RSP_INT_NS (Non-Secure Response Interrupt ch5)" value="MHU_RSP5_NS_IRQn">
+    </event>
+    <event id="event.mhu0.sw_int" display="MHU|MHU0|ID:80 MHU0 SW_INT (Software-Interrupt-0 CA55-CM33)" value="MHU_SW_MHU_INT0_IRQn">
+    </event>
+    <event id="event.mhu1.sw_int" display="MHU|MHU1|ID:81 MHU1 SW_INT (Software-Interrupt-0 CA55-CM33)" value="MHU_SW_MHU_INT1_IRQn">
+    </event>
+    <event id="event.mhu2.sw_int" display="MHU|MHU2|ID:82 MHU2 SW_INT (Software-Interrupt-0 CA55-CM33)" value="MHU_SW_MHU_INT2_IRQn">
+    </event>
+    <event id="event.mhu3.sw_int" display="MHU|MHU3|ID:83 MHU3 SW_INT (Software-Interrupt-0 CA55-CM33)" value="MHU_SW_MHU_INT3_IRQn">
+    </event>
+    <event id="event.cru.int" display="CRU|CRU0|ID:167 CRU INT (cru_image_conv_int)" value="CRU_IMAGE_CONV_INT_IRQn">
+    </event>
+    <event id="event.gpt0.ccmpa0" display="GPT|GPT0|ID:218 GPT0 CCMPA0 (GPT32E0.GTCCRA input capture/compare match)" value="GPT0_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt0.ccmpb0" display="GPT|GPT0|ID:219 GPT0 CCMPB0 (GPT32E0.GTCCRB input capture/compare match)" value="GPT0_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt0.cmpc0" display="GPT|GPT0|ID:220 GPT0 CMPC0 (GPT32E0.GTCCRC compare match)" value="GPT0_CMPC_IRQn">
+    </event>
+    <event id="event.gpt0.cmpd0" display="GPT|GPT0|ID:221 GPT0 CMPD0 (GPT32E0.GTCCRD compare match)" value="GPT0_CMPD_IRQn">
+    </event>
+    <event id="event.gpt0.cmpe0" display="GPT|GPT0|ID:222 GPT0 CMPE0 (GPT32E0.GTCCRE compare match)" value="GPT0_CMPE_IRQn">
+    </event>
+    <event id="event.gpt0.cmpf0" display="GPT|GPT0|ID:223 GPT0 CMPF0 (GPT32E0.GTCCRF compare match)" value="GPT0_CMPF_IRQn">
+    </event>
+    <event id="event.gpt0.adtrga0" display="GPT|GPT0|ID:224 GPT0 ADTRGA0 (GPT32E0.GTADTRA compare match)" value="GPT0_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt0.adtrgb0" display="GPT|GPT0|ID:225 GPT0 ADTRGB0 (GPT32E0.GTADTRB compare match)" value="GPT0_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt0.ovf0" display="GPT|GPT0|ID:226 GPT0 OVF0 (GPT32E0.GTCNT overflow (GPT32E0.GTPR compare match))" value="GPT0_OVF_IRQn">
+    </event>
+    <event id="event.gpt0.unf0" display="GPT|GPT0|ID:227 GPT0 UNF0 (GPT32E0.GTCNT underflow)" value="GPT0_UNF_IRQn">
+    </event>
+    <event id="event.gpt1.ccmpa1" display="GPT|GPT1|ID:231 GPT1 CCMPA1 (GPT32E1.GTCCRA input capture/compare match)" value="GPT1_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt1.ccmpb1" display="GPT|GPT1|ID:232 GPT1 CCMPB1 (GPT32E1.GTCCRB input capture/compare match)" value="GPT1_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt1.cmpc1" display="GPT|GPT1|ID:233 GPT1 CMPC1 (GPT32E1.GTCCRC compare match)" value="GPT1_CMPC_IRQn">
+    </event>
+    <event id="event.gpt1.cmpd1" display="GPT|GPT1|ID:234 GPT1 CMPD1 (GPT32E1.GTCCRD compare match)" value="GPT1_CMPD_IRQn">
+    </event>
+    <event id="event.gpt1.cmpe1" display="GPT|GPT1|ID:235 GPT1 CMPE1 (GPT32E1.GTCCRE compare match)" value="GPT1_CMPE_IRQn">
+    </event>
+    <event id="event.gpt1.cmpf1" display="GPT|GPT1|ID:236 GPT1 CMPF1 (GPT32E1.GTCCRF compare match)" value="GPT1_CMPF_IRQn">
+    </event>
+    <event id="event.gpt1.adtrga1" display="GPT|GPT1|ID:237 GPT1 ADTRGA1 (GPT32E1.GTADTRA compare match)" value="GPT1_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt1.adtrgb1" display="GPT|GPT1|ID:238 GPT1 ADTRGB1 (GPT32E1.GTADTRB compare match)" value="GPT1_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt1.ovf1" display="GPT|GPT1|ID:239 GPT1 OVF1 (GPT32E1.GTCNT overflow (GPT32E1.GTPR compare match))" value="GPT1_OVF_IRQn">
+    </event>
+    <event id="event.gpt1.unf1" display="GPT|GPT1|ID:240 GPT1 UNF1 (GPT32E1.GTCNT underflow)" value="GPT1_UNF_IRQn">
+    </event>
+    <event id="event.gpt2.ccmpa2" display="GPT|GPT2|ID:244 GPT2 CCMPA2 (GPT32E2.GTCCRA input capture/compare match)" value="GPT2_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt2.ccmpb2" display="GPT|GPT2|ID:245 GPT2 CCMPB2 (GPT32E2.GTCCRB input capture/compare match)" value="GPT2_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt2.cmpc2" display="GPT|GPT2|ID:246 GPT2 CMPC2 (GPT32E2.GTCCRC compare match)" value="GPT2_CMPC_IRQn">
+    </event>
+    <event id="event.gpt2.cmpd2" display="GPT|GPT2|ID:247 GPT2 CMPD2 (GPT32E2.GTCCRD compare match)" value="GPT2_CMPD_IRQn">
+    </event>
+    <event id="event.gpt2.cmpe2" display="GPT|GPT2|ID:248 GPT2 CMPE2 (GPT32E2.GTCCRE compare match)" value="GPT2_CMPE_IRQn">
+    </event>
+    <event id="event.gpt2.cmpf2" display="GPT|GPT2|ID:249 GPT2 CMPF2 (GPT32E2.GTCCRF compare match)" value="GPT2_CMPF_IRQn">
+    </event>
+    <event id="event.gpt2.adtrga2" display="GPT|GPT2|ID:250 GPT2 ADTRGA2 (GPT32E2.GTCCRE compare match)" value="GPT2_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt2.adtrgb2" display="GPT|GPT2|ID:251 GPT2 ADTRGB2 (GPT32E2.GTCCRF compare match)" value="GPT2_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt2.ovf2" display="GPT|GPT2|ID:252 GPT2 OVF2 (GPT32E2.GTCNT overflow (GPT32E2.GTPR compare match))" value="GPT2_OVF_IRQn">
+    </event>
+    <event id="event.gpt2.unf2" display="GPT|GPT2|ID:253 GPT2 UNF2 (GPT32E2.GTCNT underflow)" value="GPT2_UNF_IRQn">
+    </event>
+    <event id="event.gpt3.ccmpa3" display="GPT|GPT3|ID:257 GPT3 CCMPA3 (GPT32E3.GTCCRA input capture/compare match)" value="GPT3_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt3.ccmpb3" display="GPT|GPT3|ID:258 GPT3 CCMPB3 (GPT32E3.GTCCRB input capture/compare match)" value="GPT3_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt3.cmpc3" display="GPT|GPT3|ID:259 GPT3 CMPC3 (GPT32E3.GTCCRC compare match)" value="GPT3_CMPC_IRQn">
+    </event>
+    <event id="event.gpt3.cmpd3" display="GPT|GPT3|ID:260 GPT3 CMPD3 (GPT32E3.GTCCRD compare match)" value="GPT3_CMPD_IRQn">
+    </event>
+    <event id="event.gpt3.cmpe3" display="GPT|GPT3|ID:261 GPT3 CMPE3 (GPT32E3.GTCCRE compare match)" value="GPT3_CMPE_IRQn">
+    </event>
+    <event id="event.gpt3.cmpf3" display="GPT|GPT3|ID:262 GPT3 CMPF3 (GPT32E3.GTCCRF compare match)" value="GPT3_CMPF_IRQn">
+    </event>
+    <event id="event.gpt3.adtrga3" display="GPT|GPT3|ID:263 GPT3 ADTRGA3 (GPT32E3.GTADTRA compare match)" value="GPT3_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt3.adtrgb3" display="GPT|GPT3|ID:264 GPT3 ADTRGB3 (GPT32E3.GTADTRB compare match)" value="GPT3_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt3.ovf3" display="GPT|GPT3|ID:265 GPT3 OVF3 (GPT32E3.GTCNT overflow (GPT32E3.GTPR compare match))" value="GPT3_OVF_IRQn">
+    </event>
+    <event id="event.gpt3.unf3" display="GPT|GPT3|ID:266 GPT3 UNF3 (GPT32E3.GTCNT underflow)" value="GPT3_UNF_IRQn">
+    </event>
+    <event id="event.gpt4.ccmpa4" display="GPT|GPT4|ID:270 GPT4 CCMPA4 (GPT32E4.GTCCRA input capture/compare match)" value="GPT4_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt4.ccmpb4" display="GPT|GPT4|ID:271 GPT4 CCMPB4 (GPT32E4.GTCCRB input capture/compare match)" value="GPT4_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt4.cmpc4" display="GPT|GPT4|ID:272 GPT4 CMPC4 (GPT32E4.GTCCRC compare match)" value="GPT4_CMPC_IRQn">
+    </event>
+    <event id="event.gpt4.cmpd4" display="GPT|GPT4|ID:273 GPT4 CMPD4 (GPT32E4.GTCCRD compare match)" value="GPT4_CMPD_IRQn">
+    </event>
+    <event id="event.gpt4.cmpe4" display="GPT|GPT4|ID:274 GPT4 CMPE4 (GPT32E4.GTCCRE compare match)" value="GPT4_CMPE_IRQn">
+    </event>
+    <event id="event.gpt4.cmpf4" display="GPT|GPT4|ID:275 GPT4 CMPF4 (GPT32E4.GTCCRF compare match)" value="GPT4_CMPF_IRQn">
+    </event>
+    <event id="event.gpt4.adtrga4" display="GPT|GPT4|ID:276 GPT4 ADTRGA4 (GPT32E4.GTADTRA compare match)" value="GPT4_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt4.adtrgb4" display="GPT|GPT4|ID:277 GPT4 ADTRGB4 (GPT32E4.GTADTRB compare match)" value="GPT4_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt4.ovf4" display="GPT|GPT4|ID:278 GPT4 OVF4 (GPT32E4.GTCNT overflow (GPT32E4.GTPR compare match))" value="GPT4_OVF_IRQn">
+    </event>
+    <event id="event.gpt4.unf4" display="GPT|GPT4|ID:279 GPT4 UNF4 (GPT32E4.GTCNT underflow)" value="GPT4_UNF_IRQn">
+    </event>
+    <event id="event.gpt5.ccmpa5" display="GPT|GPT5|ID:283 GPT5 CCMPA5 (GPT32E5.GTCCRA input capture/compare match)" value="GPT5_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt5.ccmpb5" display="GPT|GPT5|ID:284 GPT5 CCMPB5 (GPT32E5.GTCCRB input capture/compare match)" value="GPT5_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt5.cmpc5" display="GPT|GPT5|ID:285 GPT5 CMPC5 (GPT32E5.GTCCRC compare match)" value="GPT5_CMPC_IRQn">
+    </event>
+    <event id="event.gpt5.cmpd5" display="GPT|GPT5|ID:286 GPT5 CMPD5 (GPT32E5.GTCCRD compare match)" value="GPT5_CMPD_IRQn">
+    </event>
+    <event id="event.gpt5.cmpe5" display="GPT|GPT5|ID:287 GPT5 CMPE5 (GPT32E5.GTCCRE compare match)" value="GPT5_CMPE_IRQn">
+    </event>
+    <event id="event.gpt5.cmpf5" display="GPT|GPT5|ID:288 GPT5 CMPF5 (GPT32E5.GTCCRF compare match)" value="GPT5_CMPF_IRQn">
+    </event>
+    <event id="event.gpt5.adtrga5" display="GPT|GPT5|ID:289 GPT5 ADTRGA5 (GPT32E5.GTADTRA compare match)" value="GPT5_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt5.adtrgb5" display="GPT|GPT5|ID:290 GPT5 ADTRGB5 (GPT32E5.GTADTRB compare match)" value="GPT5_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt5.ovf5" display="GPT|GPT5|ID:291 GPT5 OVF5 (GPT32E5.GTCNT overflow (GPT32E5.GTPR compare match))" value="GPT5_OVF_IRQn">
+    </event>
+    <event id="event.gpt5.unf5" display="GPT|GPT5|ID:292 GPT5 UNF5 (GPT32E5.GTCNT underflow)" value="GPT5_UNF_IRQn">
+    </event>
+    <event id="event.gpt6.ccmpa6" display="GPT|GPT6|ID:296 GPT6 CCMPA6 (GPT32E6.GTCCRA input capture/compare match)" value="GPT6_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt6.ccmpb6" display="GPT|GPT6|ID:297 GPT6 CCMPB6 (GPT32E6.GTCCRB input capture/compare match)" value="GPT6_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt6.cmpc6" display="GPT|GPT6|ID:298 GPT6 CMPC6 (GPT32E6.GTCCRC compare match)" value="GPT6_CMPC_IRQn">
+    </event>
+    <event id="event.gpt6.cmpd6" display="GPT|GPT6|ID:299 GPT6 CMPD6 (GPT32E6.GTCCRD compare match)" value="GPT6_CMPD_IRQn">
+    </event>
+    <event id="event.gpt6.cmpe6" display="GPT|GPT6|ID:300 GPT6 CMPE6 (GPT32E6.GTCCRE compare match)" value="GPT6_CMPE_IRQn">
+    </event>
+    <event id="event.gpt6.cmpf6" display="GPT|GPT6|ID:301 GPT6 CMPF6 (GPT32E6.GTCCRF compare match)" value="GPT6_CMPF_IRQn">
+    </event>
+    <event id="event.gpt6.adtrga6" display="GPT|GPT6|ID:302 GPT6 ADTRGA6 (GPT32E6.GTADTRA compare match)" value="GPT6_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt6.adtrgb6" display="GPT|GPT6|ID:303 GPT6 ADTRGB6 (GPT32E6.GTADTRB compare match)" value="GPT6_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt6.ovf6" display="GPT|GPT6|ID:304 GPT6 OVF6 (GPT32E6.GTCNT overflow (GPT32E6.GTPR compare match))" value="GPT6_OVF_IRQn">
+    </event>
+    <event id="event.gpt6.unf6" display="GPT|GPT6|ID:305 GPT6 UNF6 (GPT32E6.GTCNT underflow)" value="GPT6_UNF_IRQn">
+    </event>
+    <event id="event.gpt7.ccmpa7" display="GPT|GPT7|ID:309 GPT7 CCMPA7 (GPT32E7.GTCCRA input capture/compare match)" value="GPT7_CCMPA_IRQn">
+    </event>
+    <event id="event.gpt7.ccmpb7" display="GPT|GPT7|ID:310 GPT7 CCMPB7 (GPT32E7.GTCCRB input capture/compare match)" value="GPT7_CCMPB_IRQn">
+    </event>
+    <event id="event.gpt7.cmpc7" display="GPT|GPT7|ID:311 GPT7 CMPC7 (GPT32E7.GTCCRC compare match)" value="GPT7_CMPC_IRQn">
+    </event>
+    <event id="event.gpt7.cmpd7" display="GPT|GPT7|ID:312 GPT7 CMPD7 (GPT32E7.GTCCRD compare match)" value="GPT7_CMPD_IRQn">
+    </event>
+    <event id="event.gpt7.cmpe7" display="GPT|GPT7|ID:313 GPT7 CMPE7 (GPT32E7.GTCCRE compare match)" value="GPT7_CMPE_IRQn">
+    </event>
+    <event id="event.gpt7.cmpf7" display="GPT|GPT7|ID:314 GPT7 CMPF7 (GPT32E7.GTCCRF compare match)" value="GPT7_CMPF_IRQn">
+    </event>
+    <event id="event.gpt7.adtrga7" display="GPT|GPT7|ID:315 GPT7 ADTRGA7 (GPT32E7.GTADTRA compare match)" value="GPT7_ADTRGA_IRQn">
+    </event>
+    <event id="event.gpt7.adtrgb7" display="GPT|GPT7|ID:316 GPT7 ADTRGB7 (GPT32E7.GTADTRB compare match)" value="GPT7_ADTRGB_IRQn">
+    </event>
+    <event id="event.gpt7.ovf7" display="GPT|GPT7|ID:317 GPT7 OVF7 (GPT32E7.GTCNT overflow (GPT32E7.GTPR compare match))" value="GPT7_OVF_IRQn">
+    </event>
+    <event id="event.gpt7.unf7" display="GPT|GPT7|ID:318 GPT7 UNF7 (GPT32E7.GTCNT underflow)" value="GPT7_UNF_IRQn">
+    </event>
+    <event id="event.poeg.group0" display="POEG|POEG|ID:322 POEG GROUP0 (POEG group A interrupt)" value="POEG_GROUP0_IRQn">
+    </event>
+    <event id="event.poeg.group1" display="POEG|POEG|ID:323 POEG GROUP1 (POEG group B interrupt)" value="POEG_GROUP1_IRQn">
+    </event>
+    <event id="event.poeg.group2" display="POEG|POEG|ID:324 POEG GROUP2 (POEG group C interrupt)" value="POEG_GROUP2_IRQn">
+    </event>
+    <event id="event.poeg.group3" display="POEG|POEG|ID:325 POEG GROUP3 (POEG group D interrupt)" value="POEG_GROUP3_IRQn">
+    </event>
+    <event id="event.iic0.rxi" display="RIIC|RIIC0|ID:348 RIIC0 RXI (Receive data full)" value="RIIC0_RI_IRQn">
+    </event>
+    <event id="event.iic0.txi" display="RIIC|RIIC0|ID:349 RIIC0 TXI (Transmit data empty)" value="RIIC0_TI_IRQn">
+    </event>
+    <event id="event.iic0.tei" display="RIIC|RIIC0|ID:350 RIIC0 TEI (Transmit end)" value="RIIC0_TEI_IRQn">
+    </event>
+    <event id="event.iic0.naki" display="RIIC|RIIC0|ID:351 RIIC0 NAKI (Reception of a NACK)" value="RIIC0_NAKI_IRQn">
+    </event>
+    <event id="event.iic0.spi" display="RIIC|RIIC0|ID:352 RIIC0 SPI (Detection of a stop condition)" value="RIIC0_SPI_IRQn">
+    </event>
+    <event id="event.iic0.sti" display="RIIC|RIIC0|ID:353 RIIC0 STI (Detection of a start condition)" value="RIIC0_STI_IRQn">
+    </event>
+    <event id="event.iic0.ali" display="RIIC|RIIC0|ID:354 RIIC0 ALI (Arbitration lost)" value="RIIC0_ALI_IRQn">
+    </event>
+    <event id="event.iic0.tmoi" display="RIIC|RIIC0|ID:355 RIIC0 TMOI (Timeout)" value="RIIC0_TMOI_IRQn">
+    </event>
+    <event id="event.iic1.rxi" display="RIIC|RIIC1|ID:356 RIIC1 RXI (Receive data full)" value="RIIC1_RI_IRQn">
+    </event>
+    <event id="event.iic1.txi" display="RIIC|RIIC1|ID:357 RIIC1 TXI (Transmit data empty)" value="RIIC1_TI_IRQn">
+    </event>
+    <event id="event.iic1.tei" display="RIIC|RIIC1|ID:358 RIIC1 TEI (Transmit end)" value="RIIC1_TEI_IRQn">
+    </event>
+    <event id="event.iic1.naki" display="RIIC|RIIC1|ID:359 RIIC1 NAKI (Reception of a NACK)" value="RIIC1_NAKI_IRQn">
+    </event>
+    <event id="event.iic1.spi" display="RIIC|RIIC1|ID:360 RIIC1 SPI (Detection of a stop condition)" value="RIIC1_SPI_IRQn">
+    </event>
+    <event id="event.iic1.sti" display="RIIC|RIIC1|ID:361 RIIC1 STI (Detection of a start condition)" value="RIIC1_STI_IRQn">
+    </event>
+    <event id="event.iic1.ali" display="RIIC|RIIC1|ID:362 RIIC1 ALI (Arbitration lost)" value="RIIC1_ALI_IRQn">
+    </event>
+    <event id="event.iic1.tmoi" display="RIIC|RIIC1|ID:363 RIIC1 TMOI (Timeout)" value="RIIC1_TMOI_IRQn">
+    </event>
+    <event id="event.iic2.rxi" display="RIIC|RIIC2|ID:364 RIIC2 RXI (Receive data full)" value="RIIC2_RI_IRQn">
+    </event>
+    <event id="event.iic2.txi" display="RIIC|RIIC2|ID:365 RIIC2 TXI (Transmit data empty)" value="RIIC2_TI_IRQn">
+    </event>
+    <event id="event.iic2.tei" display="RIIC|RIIC2|ID:366 RIIC2 TEI (Transmit end)" value="RIIC2_TEI_IRQn">
+    </event>
+    <event id="event.iic2.naki" display="RIIC|RIIC2|ID:367 RIIC2 NAKI (Reception of a NACK)" value="RIIC2_NAKI_IRQn">
+    </event>
+    <event id="event.iic2.spi" display="RIIC|RIIC2|ID:368 RIIC2 SPI (Detection of a stop condition)" value="RIIC2_SPI_IRQn">
+    </event>
+    <event id="event.iic2.sti" display="RIIC|RIIC2|ID:369 RIIC2 STI (Detection of a start condition)" value="RIIC2_STI_IRQn">
+    </event>
+    <event id="event.iic2.ali" display="RIIC|RIIC2|ID:370 RIIC2 ALI (Arbitration lost)" value="RIIC2_ALI_IRQn">
+    </event>
+    <event id="event.iic2.tmoi" display="RIIC|RIIC2|ID:371 RIIC2 TMOI (Timeout)" value="RIIC2_TMOI_IRQn">
+    </event>
+    <event id="event.iic3.rxi" display="RIIC|RIIC3|ID:372 RIIC3 RXI (Receive data full)" value="RIIC3_RI_IRQn">
+    </event>
+    <event id="event.iic3.txi" display="RIIC|RIIC3|ID:373 RIIC3 TXI (Transmit data empty)" value="RIIC3_TI_IRQn">
+    </event>
+    <event id="event.iic3.tei" display="RIIC|RIIC3|ID:374 RIIC3 TEI (Transmit end)" value="RIIC3_TEI_IRQn">
+    </event>
+    <event id="event.iic3.naki" display="RIIC|RIIC3|ID:375 RIIC3 NAKI (Reception of a NACK)" value="RIIC3_NAKI_IRQn">
+    </event>
+    <event id="event.iic3.spi" display="RIIC|RIIC3|ID:376 RIIC3 SPI (Detection of a stop condition)" value="RIIC3_SPI_IRQn">
+    </event>
+    <event id="event.iic3.sti" display="RIIC|RIIC3|ID:377 RIIC3 STI (Detection of a start condition)" value="RIIC3_STI_IRQn">
+    </event>
+    <event id="event.iic3.ali" display="RIIC|RIIC3|ID:378 RIIC3 ALI (Arbitration lost)" value="RIIC3_ALI_IRQn">
+    </event>
+    <event id="event.iic3.tmoi" display="RIIC|RIIC3|ID:379 RIIC3 TMOI (Timeout)" value="RIIC3_TMOI_IRQn">
+    </event>
+    <event id="event.scif0.eri" display="SCIF|SCIF0|ID:380 SCIF0 ERI (Framing or Parity error)" value="SCIF0_RERR_IRQn">
+    </event>
+    <event id="event.scif0.bri" display="SCIF|SCIF0|ID:381 SCIF0 BRI (Break (BRK) or Overrun (ORER) error)" value="SCIF0_BRK_IRQn">
+    </event>
+    <event id="event.scif0.rxi" display="SCIF|SCIF0|ID:382 SCIF0 RXI (Receive data full)" value="SCIF0_RXI_IRQn">
+    </event>
+    <event id="event.scif0.txi" display="SCIF|SCIF0|ID:383 SCIF0 TXI (Transmit data empty)" value="SCIF0_TXI_IRQn">
+    </event>
+    <event id="event.scif0.tei" display="SCIF|SCIF0|ID:384 SCIF0 TEI (Transmit end)" value="SCIF0_TEI_DRI_IRQn">
+    </event>
+    <event id="event.scif1.eri" display="SCIF|SCIF1|ID:385 SCIF1 ERI (Framing or Parity error)" value="SCIF1_RERR_IRQn">
+    </event>
+    <event id="event.scif1.bri" display="SCIF|SCIF1|ID:386 SCIF1 BRI (Break (BRK) or Overrun (ORER) error)" value="SCIF1_BRK_IRQn">
+    </event>
+    <event id="event.scif1.rxi" display="SCIF|SCIF1|ID:387 SCIF1 RXI (Receive data full)" value="SCIF1_RXI_IRQn">
+    </event>
+    <event id="event.scif1.txi" display="SCIF|SCIF1|ID:388 SCIF1 TXI (Transmit data empty)" value="SCIF1_TXI_IRQn">
+    </event>
+    <event id="event.scif1.tei" display="SCIF|SCIF1|ID:389 SCIF1 TEI (Transmit end)" value="SCIF1_TEI_DRI_IRQn">
+    </event>
+    <event id="event.scif2.eri" display="SCIF|SCIF2|ID:390 SCIF2 ERI (Framing or Parity error)" value="SCIF2_RERR_IRQn">
+    </event>
+    <event id="event.scif2.bri" display="SCIF|SCIF2|ID:391 SCIF2 BRI (Break (BRK) or Overrun (ORER) error)" value="SCIF2_BRK_IRQn">
+    </event>
+    <event id="event.scif2.rxi" display="SCIF|SCIF2|ID:392 SCIF2 RXI (Receive data full)" value="SCIF2_RXI_IRQn">
+    </event>
+    <event id="event.scif2.txi" display="SCIF|SCIF2|ID:393 SCIF2 TXI (Transmit data empty)" value="SCIF2_TXI_IRQn">
+    </event>
+    <event id="event.scif2.tei" display="SCIF|SCIF2|ID:394 SCIF2 TEI (Transmit end)" value="SCIF2_TEI_DRI_IRQn">
+    </event>
+    <event id="event.scif3.eri" display="SCIF|SCIF3|ID:395 SCIF3 ERI (Framing or Parity error)" value="SCIF3_RERR_IRQn">
+    </event>
+    <event id="event.scif3.bri" display="SCIF|SCIF3|ID:396 SCIF3 BRI (Break (BRK) or Overrun (ORER) error)" value="SCIF3_BRK_IRQn">
+    </event>
+    <event id="event.scif3.rxi" display="SCIF|SCIF3|ID:397 SCIF3 RXI (Receive data full)" value="SCIF3_RXI_IRQn">
+    </event>
+    <event id="event.scif3.txi" display="SCIF|SCIF3|ID:398 SCIF3 TXI (Transmit data empty)" value="SCIF3_TXI_IRQn">
+    </event>
+    <event id="event.scif3.tei" display="SCIF|SCIF3|ID:399 SCIF3 TEI (Transmit end)" value="SCIF3_TEI_DRI_IRQn">
+    </event>
+    <event id="event.scif4.eri" display="SCIF|SCIF4|ID:400 SCIF4 ERI (Framing or Parity error)" value="SCIF4_RERR_IRQn">
+    </event>
+    <event id="event.scif4.bri" display="SCIF|SCIF4|ID:401 SCIF4 BRI (Break (BRK) or Overrun (ORER) error)" value="SCIF4_BRK_IRQn">
+    </event>
+    <event id="event.scif4.rxi" display="SCIF|SCIF4|ID:402 SCIF4 RXI (Receive data full)" value="SCIF4_RXI_IRQn">
+    </event>
+    <event id="event.scif4.txi" display="SCIF|SCIF4|ID:403 SCIF4 TXI (Transmit data empty)" value="SCIF4_TXI_IRQn">
+    </event>
+    <event id="event.scif4.tei" display="SCIF|SCIF4|ID:404 SCIF4 TEI (Transmit end)" value="SCIF4_TEI_DRI_IRQn">
+    </event>
+    <event id="event.rspi0.rx" display="RSPI|RSPI0|ID:413 RSPI0 SPRI (Receive Interrupt)" value="RSPI0_RX_IRQn">
+    </event>
+    <event id="event.rspi0.tx" display="RSPI|RSPI0|ID:414 RSPI0 SPTI (Transmit Interrupt)" value="RSPI0_TX_IRQn">
+    </event>
+    <event id="event.rspi0.err" display="RSPI|RSPI0|ID:415 RSPI0 SPEI (Error Interrupt)" value="RSPI0_ERR_IRQn">
+    </event>
+    <event id="event.rspi1.rx" display="RSPI|RSPI1|ID:416 RSPI1 SPRI (Receive Interrupt)" value="RSPI1_RX_IRQn">
+    </event>
+    <event id="event.rspi1.tx" display="RSPI|RSPI1|ID:417 RSPI1 SPTI (Transmit Interrupt)" value="RSPI1_TX_IRQn">
+    </event>
+    <event id="event.rspi1.err" display="RSPI|RSPI1|ID:418 RSPI1 SPEI (Error Interrupt)" value="RSPI1_ERR_IRQn">
+    </event>
+    <event id="event.rspi2.rx" display="RSPI|RSPI2|ID:419 RSPI2 SPRI (Receive Interrupt)" value="RSPI2_RX_IRQn">
+    </event>
+    <event id="event.rspi2.tx" display="RSPI|RSPI2|ID:420 RSPI2 SPTI (Transmit Interrupt)" value="RSPI2_TX_IRQn">
+    </event>
+    <event id="event.rspi2.err" display="RSPI|RSPI2|ID:421 RSPI2 SPEI (Error Interrupt)" value="RSPI2_ERR_IRQn">
+    </event>
+  </bsp>
+</raModuleDescription>

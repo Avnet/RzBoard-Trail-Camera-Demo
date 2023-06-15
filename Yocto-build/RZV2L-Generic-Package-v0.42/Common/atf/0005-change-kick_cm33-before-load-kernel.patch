@@ -1,0 +1,73 @@
+From 036052e950b03a67835348fa2b964ad286d4e721 Mon Sep 17 00:00:00 2001
+From: "son.nguyen-cong" <son.nguyen-cong@banvien.com.vn>
+Date: Wed, 9 Nov 2022 08:11:30 +0700
+Subject: [PATCH] change kick_cm33 before load kernel
+
+---
+ bl2/bl2_image_load_v2.c | 15 ++++++++++++++-
+ bl2/bl2_main.c          |  8 ++++----
+ 2 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/bl2/bl2_image_load_v2.c b/bl2/bl2_image_load_v2.c
+index 48c9beca6..cd81d6444 100644
+--- a/bl2/bl2_image_load_v2.c
++++ b/bl2/bl2_image_load_v2.c
+@@ -19,6 +19,9 @@
+ 
+ #include "bl2_private.h"
+ 
++extern void init_I2C_clk(void);
++extern void kick_cm33() ;
++
+ /*******************************************************************************
+  * This function loads SCP_BL2/BL3x images and returns the ep_info for
+  * the next executable image.
+@@ -66,7 +69,7 @@ struct entry_point_info *bl2_load_images(void)
+ 
+ 		if ((bl2_node_info->image_info->h.attr &
+ 		    IMAGE_ATTRIB_SKIP_LOADING) == 0U) {
+-			INFO("BL2: Loading image id %d\n", bl2_node_info->image_id);
++			NOTICE("BL2: Loading image id %d\n", bl2_node_info->image_id);
+ 			err = load_auth_image(bl2_node_info->image_id,
+ 				bl2_node_info->image_info);
+ 			if (err != 0) {
+@@ -85,6 +88,16 @@ struct entry_point_info *bl2_load_images(void)
+ 			plat_error_handler(err);
+ 		}
+ 
++		if(bl2_node_info->image_id == BL331_IMAGE_ID)
++		{
++			NOTICE("BL2: Kich CM33 image id = %d\n", bl2_node_info->image_id);
++			/* init_I2C_clk */
++			init_I2C_clk();
++
++			/* Kick CM33 */
++			kick_cm33();
++		}
++
+ 		/* Go to next image */
+ 		bl2_node_info = bl2_node_info->next_load_info;
+ 	}
+diff --git a/bl2/bl2_main.c b/bl2/bl2_main.c
+index 9c521802a..a9cc33279 100644
+--- a/bl2/bl2_main.c
++++ b/bl2/bl2_main.c
+@@ -221,11 +221,11 @@ void bl2_main(void)
+ 	/* Load the subsequent bootloader images. */
+ 	next_bl_ep_info = bl2_load_images();
+ 
+-		/* init_I2C_clk */
+-		init_I2C_clk();
++		// /* init_I2C_clk */
++		// init_I2C_clk();
+ 
+-        /* Kick CM33 */
+-        kick_cm33();
++        // /* Kick CM33 */
++        // kick_cm33();
+ 
+         /* Teardown the Measured Boot backend */
+ 	bl2_plat_mboot_finish();
+-- 
+2.17.1
+

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<raConfiguration version="7">
+  <generalSettings>
+    <option key="#Board#" value="board.rzv2l_smarc"/>
+    <option key="CPU" value="RZV2L"/>
+    <option key="#TargetName#" value="R9A07G054L23GBG"/>
+    <option key="#TargetARCHITECTURE#" value="cortex-m33"/>
+    <option key="#DeviceCommand#" value="R9A07G054L23_M33"/>
+    <option key="#RTOS#" value="rtos.awsfreertos"/>
+    <option key="#pinconfiguration#" value="R9A07G054L23GBG.pincfg"/>
+    <option key="#FSPVersion#" value="1.0.0"/>
+    <option key="#ConfigurationFragments#" value="Renesas##BSP##Board##rzv2l_smarc##"/>
+    <option key="#SELECTED_TOOLCHAIN#" value="gcc-arm-embedded"/>
+    <option key="#ToolchainVersion#" value="9.2.1.20191025"/>
+  </generalSettings>
+  <raClockConfiguration>
+    <node id="board.clock.osc.freq" mul="24000000" option="_edit"/>
+    <node id="board.clock.iclk.freq" mul="1200000000" option="_edit"/>
+    <node id="board.clock.i2clk.freq" mul="200000000" option="_edit"/>
+    <node id="board.clock.gclk.freq" mul="500000000" option="_edit"/>
+    <node id="board.clock.s0clk.freq" mul="12000" option="_edit"/>
+    <node id="board.clock.s1clk.freq" mul="6000" option="_edit"/>
+    <node id="board.clock.spi0clk.freq" mul="200000000" option="_edit"/>
+    <node id="board.clock.spi1clk.freq" mul="100000000" option="_edit"/>
+    <node id="board.clock.sd0clk.freq" mul="533000000" option="_edit"/>
+    <node id="board.clock.sd1clk.freq" mul="533000000" option="_edit"/>
+    <node id="board.clock.m0clk.freq" mul="200000000" option="_edit"/>
+    <node id="board.clock.m1clk.freq" mul="3000000000" option="_edit"/>
+    <node id="board.clock.m2clk.freq" mul="266500000" option="_edit"/>
+    <node id="board.clock.m3clk.freq" mul="3000000000" option="_edit"/>
+    <node id="board.clock.m4clk.freq" mul="16656000" option="_edit"/>
+    <node id="board.clock.hpclk.freq" mul="250000000" option="_edit"/>
+    <node id="board.clock.tsuclk.freq" mul="80000000" option="_edit"/>
+    <node id="board.clock.ztclk.freq" mul="100000000" option="_edit"/>
+    <node id="board.clock.p0clk.freq" mul="100000000" option="_edit"/>
+    <node id="board.clock.p1clk.freq" mul="200000000" option="_edit"/>
+    <node id="board.clock.p2clk.freq" mul="100000000" option="_edit"/>
+    <node id="board.clock.atclk.freq" mul="400000000" option="_edit"/>
+  </raClockConfiguration>
+  <raModuleConfiguration/>
+  <raPinConfiguration>
+    <pincfg active="true" name="" symbol="">
+      <configSetting altId="p007.output.high" configurationId="p007"/>
+      <configSetting altId="p008.output.high" configurationId="p008"/>
+      <configSetting altId="p009.output.high" configurationId="p009"/>
+    </pincfg>
+  </raPinConfiguration>
+</raConfiguration>

@@ -1,0 +1,744 @@
+From d5960d32f11b3cedf7f2c106415026ea95aa856e Mon Sep 17 00:00:00 2001
+From: Nick <nick.cheng@avnet.com>
+Date: Thu, 1 Sep 2022 17:16:04 +0800
+Subject: [PATCH 19/27] MIPI:CODE:RzBoard: Add host transfer DCS command for
+ MIPI DSI 2-lanes
+
+	add host transfer Long/Short packets via DCS command for RZ/G2L MIPI DSI module
+	enable MIPI DSI clock
+	update all CPG PLL5 setting support 2 lanes MIPI DSI and 4 lanes
+
+Signed-off-by: Nick <nick.cheng@avnet.com>
+---
+ drivers/gpu/drm/panel/panel-ilitek-ili9881c.c |   2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c        | 187 ++++++++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c         |   6 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h         |   1 +
+ drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c      | 264 +++++++++++++++---
+ drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi_regs.h |  61 ++++
+ 6 files changed, 484 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c b/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
+index 1be56eda50b4..4fc374827b8d 100644
+--- a/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
++++ b/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c
+@@ -551,7 +551,6 @@ static int ili9881c_prepare(struct drm_panel *panel)
+ 
+ 
+ 	ili9881c_reset(tftcp);
+-	ili9881c_getID(tftcp);
+ 
+ 	return 0;
+ }
+@@ -610,6 +609,7 @@ static int ili9881c_enable(struct drm_panel *panel)
+             return ret;
+     }
+ 	dev_dbg(&tftcp->dsi->dev,"%s\n",__func__);
++	ili9881c_getID(tftcp);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index fd31d8fe7789..eb30f40981b4 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -431,6 +431,178 @@ struct cpg_param resolution_param[TABLE_MAX] = {
+ 	},
+ };
+ 
++struct cpg_param resolution_param_2lane[TABLE_MAX] = {
++	{
++		/* VGA 25.175MHz	*/
++		/* frequency		*/	25175,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	25,
++		/* pl5_fracin		*/	2936012,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* VGA 25.200MHz	*/
++		/* frequency		*/	25200,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	25,
++		/* pl5_fracin		*/	3355443,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* 480p/576p 27.000MHz	*/
++		/* frequency		*/	27000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	27,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* 480p 27.027MHz	*/
++		/* frequency		*/	27027,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	27,
++		/* pl5_fracin		*/	452984,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* WVGA 29.605MHz	*/
++		/* frequency		*/	29605,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	29,
++		/* pl5_fracin		*/	10150216,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* SVGA 40.00MHz	*/
++		/* frequency		*/	40000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	40,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* XGA	65.00MHz	*/
++		/* frequency		*/	65000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	65,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* WXGA 1280x800 71.0MHz	*/
++		/* frequency		*/	71000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	71,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* 720p 74.176MHz	*/
++		/* frequency		*/	74176,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	74,
++		/* pl5_fracin		*/	2952790,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* 720p 74.25MHz	*/
++		/* frequency		*/	74250,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	74,
++		/* pl5_fracin		*/	4194304,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* FWXGA 1360x768 85.5MHz	*/
++		/* frequency		*/	85500,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	85,
++		/* pl5_fracin		*/	8388608,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* WXGA+ 1440x900 88.75MHz		*/
++		/* frequency		*/	88750,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	88,
++		/* pl5_fracin		*/	12582912,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* SXGA 108.0MHz	*/
++		/* frequency		*/	108000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	108,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_divval		*/	0,
++		/* pl5_spread		*/	0x16,
++		/* dsi_div_a		*/	3,	// 1/8
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++};
++
+ struct cpg_param resolution_param_parallel[TABLE_PARALLEL_MAX] = {
+ 	{
+ 		/* VGA 25.175MHz	*/
+@@ -593,6 +765,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 		u32 tableMax;
+ 		struct cpg_param *paramPtr;
+ 		u32 val, nowLcdcClkOn;
++		unsigned long clk_pll5;
+ 
+ 		if (of_machine_is_compatible("renesas,r9a07g043")) {
+ 			parallelOut = 1;
+@@ -600,8 +773,16 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 			paramPtr = resolution_param_parallel;
+ 		} else {
+ 			parallelOut = 0;
+-			tableMax = TABLE_MAX;
+-			paramPtr = resolution_param;
++			if( rcdu->dsi_lanes == 2 ) {
++				tableMax = TABLE_MAX - 1;
++				paramPtr = resolution_param_2lane;
++				clk_pll5 = 0x10000; //SEL_PLL5_1 clock
++			} else {
++				/* support 4-lane MIPI DSI */
++				tableMax = TABLE_MAX;
++				paramPtr = resolution_param;
++				clk_pll5 = 0x10001; //SEL_PLL5_3 clock
++			}
+ 		}
+ 
+ 		for (i = 0; i < tableMax; i++) {
+@@ -674,7 +855,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 				val = reg_read(cpg_base + CPG_CPG_CLKSTATUS);
+ 			} while ((val & DIVDSILPCLK_STS) != 0);
+ 			/* SEL_PLL5_3 clock */
+-			reg_write(cpg_base + CPG_OTHERFUNC1_REG, 0x10001);
++			reg_write(cpg_base + CPG_OTHERFUNC1_REG, clk_pll5); //SEL_PLL5_4 Route Setting
+ 			/* DIV_DSI_A, DIV_DSI_B */
+ 			reg_write(cpg_base + CPG_PL5_SDIV, 0x01010000 |
+ 				 (paramPtr[index].dsi_div_a << 0) |
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 3d8a59d60c38..a9385dd76116 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -629,6 +629,12 @@ static int rcar_du_probe(struct platform_device *pdev)
+ 	rcdu->dev = &pdev->dev;
+ 	rcdu->info = of_device_get_match_data(rcdu->dev);
+ 
++	if (of_property_read_u32(pdev->dev.of_node, "dsi-lanes",
++                                 &rcdu->dsi_lanes)) {
++		dev_err(&pdev->dev, "no found the property 'dsi-lanes',using the default setting\n");
++		rcdu->dsi_lanes = 4;
++	}
++
+ 	platform_set_drvdata(pdev, rcdu);
+ 
+ 	/* I/O resources */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 36be27277b79..d81abc1821eb 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -101,6 +101,7 @@ struct rcar_du_device {
+ 	unsigned int dpad0_source;
+ 	unsigned int dpad1_source;
+ 	unsigned int vspd1_sink;
++	unsigned int dsi_lanes;
+ };
+ 
+ static inline bool rcar_du_has(struct rcar_du_device *rcdu,
+diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+index f88873e302f9..e6b2c019787f 100644
+--- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+@@ -28,10 +28,13 @@
+ #include <drm/drm_of.h>
+ #include <drm/drm_modeset_helper_vtables.h>
+ #include <drm/drm_print.h>
++#include <video/mipi_display.h>
+ 
+ #include "rzg2l_mipi_dsi_regs.h"
+ #include "rzg2l_mipi_dsi.h"
+ 
++#define RZ_G2L_MIPI_DSI_MAX_DATA_LANES	4
++
+ struct rzg2l_mipi_dsi {
+ 	struct device *dev;
+ 	void __iomem *link_mmio;
+@@ -63,7 +66,6 @@ struct rzg2l_mipi_dsi {
+ 	} rstc;
+ 
+ 	enum mipi_dsi_pixel_format format;
+-	unsigned int num_data_lanes;
+ 	unsigned int lanes;
+ 	unsigned long mode_flags;
+ 
+@@ -96,6 +98,8 @@ static void rzg2l_mipi_dsi_clr(void __iomem *mem, u32 reg, u32 clr)
+ 	rzg2l_mipi_dsi_write(mem, reg, rzg2l_mipi_dsi_read(mem, reg) & ~clr);
+ }
+ 
++static int rzg2l_mipi_dsi_find_panel_or_bridge(struct rzg2l_mipi_dsi *mipi_dsi);
++
+ /* -----------------------------------------------------------------------------
+  * Hardware Setup
+  */
+@@ -179,10 +183,7 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *mipi_dsi)
+ 		timings.ths_settle = 9;
+ 		timings.ths_exit = 13;
+ 		timings.ths_trail = 17;
+-		if (IS_ENABLED(CONFIG_DRM_I2C_ADV7511))
+-			timings.ths_zero = 25;
+-		else
+-			timings.ths_zero = 23;
++		timings.ths_zero = 23;
+ 	}
+ 
+ 	dphytim0 = DSIDPHYTIM0_TCLK_MISS(timings.tclk_miss) |
+@@ -562,6 +563,10 @@ static int rzg2l_mipi_dsi_attach(struct drm_bridge *bridge,
+ 	struct drm_encoder *encoder = bridge->encoder;
+ 	int ret;
+ 
++	ret = rzg2l_mipi_dsi_find_panel_or_bridge(mipi_dsi);
++	if (ret < 0)
++		return ret;
++
+ 	/* If we have a next bridge just attach it. */
+ 	if (mipi_dsi->next_bridge)
+ 		return drm_bridge_attach(bridge->encoder,
+@@ -630,15 +635,15 @@ static void rzg2l_mipi_dsi_disable(struct drm_bridge *bridge)
+ 	struct rzg2l_mipi_dsi *mipi_dsi = bridge_to_rzg2l_mipi_dsi(bridge);
+ 	int ret;
+ 
++	ret = rzg2l_mipi_dsi_stop_video(mipi_dsi);
++	if (ret < 0)
++		return;
++
+ 	if (mipi_dsi->panel) {
+ 		drm_panel_disable(mipi_dsi->panel);
+ 		drm_panel_unprepare(mipi_dsi->panel);
+ 	}
+ 
+-	ret = rzg2l_mipi_dsi_stop_video(mipi_dsi);
+-	if (ret < 0)
+-		return;
+-
+ 	ret = rzg2l_mipi_dsi_stop_hs_clock(mipi_dsi);
+ 	if (ret < 0)
+ 		return;
+@@ -702,6 +707,10 @@ int rzg2l_mipi_dsi_clk_enable(struct drm_bridge *bridge)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = clk_prepare_enable(mipi_dsi->clocks.lpclk);
++	if (ret < 0)
++		return ret;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rzg2l_mipi_dsi_clk_enable);
+@@ -715,6 +724,7 @@ void rzg2l_mipi_dsi_clk_disable(struct drm_bridge *bridge)
+ 	clk_disable_unprepare(mipi_dsi->clocks.aclk);
+ 	clk_disable_unprepare(mipi_dsi->clocks.pclk);
+ 	clk_disable_unprepare(mipi_dsi->clocks.vclk);
++	clk_disable_unprepare(mipi_dsi->clocks.lpclk);
+ 
+ 	reset_control_assert(mipi_dsi->rstc.cmn_rstb);
+ 	reset_control_assert(mipi_dsi->rstc.areset_n);
+@@ -731,7 +741,7 @@ static int rzg2l_mipi_dsi_host_attach(struct mipi_dsi_host *host,
+ {
+ 	struct rzg2l_mipi_dsi *mipi_dsi = host_to_rzg2l_mipi_dsi(host);
+ 
+-	if (device->lanes > mipi_dsi->num_data_lanes)
++	if (device->lanes > RZ_G2L_MIPI_DSI_MAX_DATA_LANES)
+ 		return -EINVAL;
+ 
+ 	mipi_dsi->lanes = device->lanes;
+@@ -747,24 +757,232 @@ static int rzg2l_mipi_dsi_host_detach(struct mipi_dsi_host *host,
+ 	return 0;
+ }
+ 
++/* Based on MIPI Alliance Specification for DSI */
++static const char * const error_report[16] = {
++	"SoT Error",
++	"SoT Sync Error",
++	"EoT Sync Error",
++	"Escape Mode Entry Command Error",
++	"Low-Power Transmit Sync Error",
++	"Peripheral Timeout Error",
++	"False Control Error",
++	"Contention Detected",
++	"ECC Error, single-bit",
++	"ECC Error, multi-bit",
++	"Checksum Error",
++	"DSI Data Type Not Recognized",
++	"DSI VC ID Invalid",
++	"Invalid Transmission Length",
++	"Reserved",
++	"DSI Protocol Violation",
++};
++
++static ssize_t rzg2l_mipi_dsi_host_transfer(struct mipi_dsi_host *host,
++					    const struct mipi_dsi_msg *msg)
++{
++	struct rzg2l_mipi_dsi *mipi_dsi = host_to_rzg2l_mipi_dsi(host);
++	struct mipi_dsi_packet packet;
++	bool is_long = mipi_dsi_packet_format_is_long(msg->type);
++	bool is_need_bta = false;
++	ssize_t err = 0;
++	u32 sqch0dsc00ar, sqch0dsc00br, status;
++	unsigned int timeout;
++	unsigned int count;
++	unsigned int i, j;
++	u32 tx_data, rx_data;
++
++	err = mipi_dsi_create_packet(&packet, msg);
++	if (err < 0)
++		return err;
++
++	/* Temporarily support maximum 16 bytes payload and RX data */
++	if ((packet.payload_length > 16) || (msg->rx_len > 16))
++		return -ENOSPC;
++
++	if ((msg->flags & MIPI_DSI_MSG_REQ_ACK) ||
++	   ((msg->type & MIPI_DSI_GENERIC_READ_REQUEST_0_PARAM ||
++	     msg->type & MIPI_DSI_GENERIC_READ_REQUEST_1_PARAM ||
++	     msg->type & MIPI_DSI_GENERIC_READ_REQUEST_2_PARAM ||
++	     msg->type & MIPI_DSI_DCS_READ) &&
++	    (msg->rx_buf && msg->rx_len > 0)))
++		is_need_bta = true;
++	else
++		sqch0dsc00ar = SQCH0DSC00AR_BTA_NO_BTA;
++
++	/* Terminate Operation after this descriptor finished */
++	sqch0dsc00ar |= SQCH0DSC00AR_NXACT_TERM;
++
++	/* High speed transmission */
++	if (msg->flags & MIPI_DSI_MSG_USE_LPM)
++		sqch0dsc00ar |= SQCH0DSC00AR_SPD_LOW;
++	else
++		sqch0dsc00ar |= SQCH0DSC00AR_SPD_HIGH;
++
++	/* Write TX Packet Header */
++	sqch0dsc00ar |= (SQCH0DSC00AR_VC_DT(packet.header[0]) |
++			 SQCH0DSC00AR_DATA0(packet.header[1]) |
++			 SQCH0DSC00AR_DATA1(packet.header[2]));
++
++	/* Sending non-read packets */
++	if (is_long) {
++		/* Count the amount of TXPPDxR will be used */
++		count = ((packet.payload_length - 1) / 4) + 1;
++		/* Long packet transmission */
++		sqch0dsc00ar |= SQCH0DSC00AR_FMT_LONG;
++		/* Write TX Packet Payload Data */
++		for (i = 0; i < count; i++) {
++			tx_data = 0;
++			for (j = 0; j < 4; j++) {
++				if (packet.payload_length == (4 * i + j))
++					break;
++
++				tx_data |= (packet.payload[4 * i + j] << (8 * j));
++			}
++
++			rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, TXPPDxR(i),
++					     tx_data);
++		}
++	} else {
++		/* Short packet transmission */
++		sqch0dsc00ar |= SQCH0DSC00AR_FMT_SHORT;
++	}
++
++	if (is_need_bta) {
++		if (msg->flags & MIPI_DSI_MSG_REQ_ACK)
++			sqch0dsc00ar |= SQCH0DSC00AR_BTA_NON_READ_BTA;
++		else
++			sqch0dsc00ar |= SQCH0DSC00AR_BTA_READ_BTA;
++
++	}
++
++	rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0DSC00AR, sqch0dsc00ar);
++
++	/* Packet Payload Data register is used to data select */
++	sqch0dsc00br = SQCH0DSC00BR_DTSEL_PAYLOAD_SIZE;
++	rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0DSC00BR, sqch0dsc00br);
++
++	/* Indicate rx result save slot number 0 */
++	rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0DSC00CR,
++						  SQCH0DSC00CR_FINACT);
++	/* Start Sequence 0 Operation */
++	rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0SET0R,
++			rzg2l_mipi_dsi_read(mipi_dsi->link_mmio, SQCH0SET0R) |
++			SQCH0SET0R_START);
++
++	for (timeout = 10; timeout > 0; --timeout) {
++		status = rzg2l_mipi_dsi_read(mipi_dsi->link_mmio, SQCH0SR);
++		if (status & SQCH0SR_ADESFIN) {
++			/* Clear the status bit */
++			rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0SCR,
++					     SQCH0SCR_ADESFIN);
++
++			break;
++		}
++
++		usleep_range(1000, 2000);
++	}
++
++	if (!timeout) {
++		err = -ETIMEDOUT;
++		goto stop_sequence;
++
++	}
++
++	if (is_need_bta) {
++		u8 *msg_rx = msg->rx_buf;
++		size_t size = 0;
++		u32 datatype, errors;
++
++		status = rzg2l_mipi_dsi_read(mipi_dsi->link_mmio, RXRSS0R);
++		if (status & RXRSS0R_RXSUC) {
++			datatype = (status & RXRSS0R_DT) >> 16;
++
++			switch (datatype & 0x3f) {
++			case 0:
++				dev_dbg(mipi_dsi->dev, "ACK\n");
++				break;
++			case MIPI_DSI_RX_END_OF_TRANSMISSION:
++				dev_dbg(mipi_dsi->dev, "EoTp\n");
++				break;
++			case MIPI_DSI_RX_ACKNOWLEDGE_AND_ERROR_REPORT:
++				errors = status & RXRSS0R_DATA;
++
++				dev_dbg(mipi_dsi->dev,
++					"Acknowledge and error report: %04x\n",
++					errors);
++
++				for (i = 0; i < ARRAY_SIZE(error_report); i++)
++					if (errors & BIT(i))
++						dev_dbg(mipi_dsi->dev,
++							"  %2u: %s\n",
++							i, error_report[i]);
++				break;
++			case MIPI_DSI_RX_DCS_SHORT_READ_RESPONSE_1BYTE:
++			case MIPI_DSI_RX_GENERIC_SHORT_READ_RESPONSE_1BYTE:
++				msg_rx[0] = (status & RXRSS0R_DATA0);
++				break;
++			case MIPI_DSI_RX_DCS_SHORT_READ_RESPONSE_2BYTE:
++			case MIPI_DSI_RX_GENERIC_SHORT_READ_RESPONSE_2BYTE:
++				msg_rx[0] = (status & RXRSS0R_DATA0);
++				msg_rx[1] = (status & RXRSS0R_DATA1) >> 8;
++				break;
++			case MIPI_DSI_RX_GENERIC_LONG_READ_RESPONSE:
++			case MIPI_DSI_RX_DCS_LONG_READ_RESPONSE:
++				size = (status & (RXRSS0R_DATA0 | RXRSS0R_DATA1));
++				count = ((size - 1) / 4) + 1;
++				/* Read RX Packet Payload Data */
++				for (i = 0; i < count; i++) {
++					rx_data = rzg2l_mipi_dsi_read(mipi_dsi->link_mmio,
++								      RXPPDxR(i));
++					for (j = 0; j < 4; j++) {
++						if (size == (4 * i + j))
++							break;
++						msg_rx[4 * i + j] = (rx_data >> (8 * j)) & 0xff;
++					}
++				}
++				break;
++			default:
++				dev_err(mipi_dsi->dev,
++					"unhandled response type: %02x\n",
++					datatype & 0x3f);
++
++				err = -EPROTO;
++				goto stop_sequence;
++			}
++		} else {
++			err = -EPROTO;
++			goto stop_sequence;
++		}
++	}
++
++	err = 1;
++
++stop_sequence:
++	/* Stop Sequence 0 Operation */
++	rzg2l_mipi_dsi_write(mipi_dsi->link_mmio, SQCH0SET0R,
++			rzg2l_mipi_dsi_read(mipi_dsi->link_mmio, SQCH0SET0R) &
++			(~SQCH0SET0R_START));
++
++	return err;
++}
++
+ static const struct mipi_dsi_host_ops rzg2l_mipi_dsi_host_ops = {
+ 	.attach = rzg2l_mipi_dsi_host_attach,
+ 	.detach = rzg2l_mipi_dsi_host_detach,
++	.transfer = rzg2l_mipi_dsi_host_transfer,
+ };
+ 
+ /* -----------------------------------------------------------------------------
+  * Probe & Remove
+  */
+-static int rzg2l_mipi_dsi_parse_dt(struct rzg2l_mipi_dsi *mipi_dsi)
++static int rzg2l_mipi_dsi_find_panel_or_bridge(struct rzg2l_mipi_dsi *mipi_dsi)
+ {
+ 	struct device_node *local_output = NULL;
+ 	struct device_node *remote_input = NULL;
+ 	struct device_node *remote = NULL;
+ 	struct device_node *node;
+-	struct property *prop;
+ 	bool is_bridge = false;
+ 	int ret = 0;
+-	int len, num_lanes;
+ 
+ 	local_output = of_graph_get_endpoint_by_regs(mipi_dsi->dev->of_node,
+ 						     1, 0);
+@@ -820,22 +1038,6 @@ static int rzg2l_mipi_dsi_parse_dt(struct rzg2l_mipi_dsi *mipi_dsi)
+ 		}
+ 	}
+ 
+-	prop = of_find_property(local_output, "data-lanes", &len);
+-	if (!prop) {
+-		mipi_dsi->num_data_lanes = 4;
+-		dev_dbg(mipi_dsi->dev, "Using default data lanes\n");
+-		goto done;
+-	}
+-
+-	num_lanes = len / sizeof(u32);
+-	if (num_lanes < 1 || num_lanes > 4) {
+-		dev_err(mipi_dsi->dev, "data lanes definition is not correct\n");
+-		ret = -EINVAL;
+-		goto done;
+-	}
+-
+-	mipi_dsi->num_data_lanes = num_lanes;
+-
+ done:
+ 	of_node_put(local_output);
+ 	of_node_put(remote_input);
+@@ -928,10 +1130,6 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, mipi_dsi);
+ 	mipi_dsi->dev = dev;
+ 
+-	ret = rzg2l_mipi_dsi_parse_dt(mipi_dsi);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* Init bridge */
+ 	mipi_dsi->bridge.driver_private = mipi_dsi;
+ 	mipi_dsi->bridge.funcs = &rzg2l_mipi_dsi_bridge_ops;
+diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi_regs.h b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi_regs.h
+index 2617c642d3e0..8e846772ded3 100644
+--- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi_regs.h
++++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi_regs.h
+@@ -82,6 +82,23 @@
+ #define RSTSR_SWRSTLP			(1 << 1)
+ #define RSTSR_SWRSTHS			(1 << 0)
+ 
++/* Tx Packet Payload Data x Register */
++
++#define TXPPDxR(x)			(0x160 + (x) * 4)
++
++/* Rx Result Save Slot 0 Register */
++#define RXRSS0R				0x240
++#define RXRSS0R_RXSUC			BIT(25)
++#define RXRSS0R_FMT			BIT(24)
++#define RXRSS0R_VC			GENMASK(23, 22)
++#define RXRSS0R_DT			GENMASK(21, 16)
++#define RXRSS0R_DATA1			GENMASK(15, 8)
++#define RXRSS0R_DATA0			GENMASK(7, 0)
++#define RXRSS0R_DATA			(RXRSS0R_DATA1 | RXRSS0R_DATA0)
++
++/* Rx Packet Payload Data x Register */
++#define RXPPDxR(x)			(0x2C0 + (x) * 4)
++
+ /* Clock Lane Stop Time Set Register */
+ #define CLSTPTSETR			0x314
+ #define CLSTPTSETR_CLKKPT(x)		((x) << 24)
+@@ -153,4 +170,48 @@
+ #define VICH1HPSETR_HFP(x)		(((x) & 0x1fff) << 16)
+ #define VICH1HPSETR_HBP(x)		(((x) & 0x1fff) << 0)
+ 
++/* Sequence Channel 0 Set 0 Register */
++#define SQCH0SET0R			0x5C0
++#define SQCH0SET0R_START		BIT(0)
++
++/* Sequence Channel 0 Set 1 Register */
++#define SQCH0SET1R			0x5C4
++
++/* Sequence Channel 0 Status Register */
++#define SQCH0SR				0x5D0
++#define SQCH0SR_RUNNING			BIT(2)
++#define SQCH0SR_ADESFIN			BIT(8)
++
++/* Sequence Channel 0 Status Clear Register */
++#define SQCH0SCR			0x5D4
++#define SQCH0SCR_ADESFIN		BIT(8)
++
++/* Sequence Channel 0 Descriptor 00-A Register */
++#define SQCH0DSC00AR			0x780
++#define SQCH0DSC00AR_NXACT_TERM		(0 << 28)
++#define SQCH0DSC00AR_NXACT_OPER		(1 << 28)
++#define SQCH0DSC00AR_BTA_NO_BTA		(0 << 26)
++#define SQCH0DSC00AR_BTA_NON_READ_BTA	(1 << 26)
++#define SQCH0DSC00AR_BTA_READ_BTA	(2 << 26)
++#define SQCH0DSC00AR_BTA_ONLY_BTA	(3 << 26)
++#define SQCH0DSC00AR_SPD_HIGH		(0 << 25)
++#define SQCH0DSC00AR_SPD_LOW		(1 << 25)
++#define SQCH0DSC00AR_FMT_SHORT		(0 << 24)
++#define SQCH0DSC00AR_FMT_LONG		(1 << 24)
++#define SQCH0DSC00AR_VC_DT(x)		((x) << 16)
++#define SQCH0DSC00AR_DATA0(x)		(x)
++#define SQCH0DSC00AR_DATA1(x)		((x) << 8)
++
++/* Sequence Channel 0 Descriptor 00-B Register */
++#define SQCH0DSC00BR			0x784
++#define SQCH0DSC00BR_DTSEL_PAYLOAD_SIZE	(0 << 24)
++#define SQCH0DSC00BR_DTSEL_MEM_SPACE	(1 << 24)
++
++/* Sequence Channel 0 Descriptor 00-C Register */
++#define SQCH0DSC00CR			0x788
++#define SQCH0DSC00CR_FINACT		BIT(0)
++
++/* Sequence Channel 0 Descriptor 00-D Register */
++#define SQCH0DSC00DR			0x78C
++
+ #endif /* __RZG2L_MIPI_DSI_REGS_H__ */
+-- 
+2.17.1
+

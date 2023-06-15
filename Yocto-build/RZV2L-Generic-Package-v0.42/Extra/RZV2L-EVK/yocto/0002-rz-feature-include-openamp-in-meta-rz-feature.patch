@@ -1,0 +1,25 @@
+From a3f0e7d9a2f0760d6a24ff9571d19da749eb6739 Mon Sep 17 00:00:00 2001
+From: Vu Dang <vu.dang.te@renesas.com>
+Date: Mon, 26 Dec 2022 16:54:01 +0700
+Subject: [PATCH 2/5] rz-feature: include openamp in meta-rz-feature
+
+Signed-off-by: Vu Dang <vu.dang.te@renasas.com>
+---
+ meta-rz-features/conf/layer.conf | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/meta-rz-features/conf/layer.conf b/meta-rz-features/conf/layer.conf
+index 5e0b65e..789a16f 100644
+--- a/meta-rz-features/conf/layer.conf
++++ b/meta-rz-features/conf/layer.conf
+@@ -3,6 +3,7 @@
+ include ${LAYERDIR}/include/graphic/feature.inc
+ include ${LAYERDIR}/include/codec/plugin.inc
+ include ${LAYERDIR}/include/demos/demos.inc
++include ${LAYERDIR}/include/openamp/openamp.inc
+ 
+ LAYERDEPENDS_rz-features = "rzg2" 
+ 
+-- 
+2.25.1
+
